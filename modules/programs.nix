@@ -1,25 +1,30 @@
 { pkgs, ... }: {
+  
   environment.systemPackages = with pkgs; [
-    htop
-    usbutils
-    lsof
-    lazygit
-    dtc
-    picocom
-    aravis
-    libraspberrypi
-    neovim
-    ffmpeg
-    direnv
-    libgpiod
-    uvcdynctrl
-    mjpg-streamer
-    wget
-    kitty
-    git
-    btop
-    v4l-utils
-    neofetch
-    i2c-tools
+    # System Tools
+    git 
+    htop 
+    tmux 
+    wget 
+    vim 
+    usbutils 
+    pciutils
+    
+    # Rust Development
+    (rust-bin.stable.latest.default.override { 
+      extensions = [ "rust-src" "rust-analyzer" ]; 
+    })
+    
+    # SDR & Radio Astronomy
+    soapysdr 
+    soapyairspy 
+    airspy 
+    rtl-sdr 
+    ffmpeg 
+    gcc 
+    pkg-config
   ];
+
+  # Udev rules for SDR hardware
+  services.udev.packages = [ pkgs.airspy pkgs.rtl-sdr ];
 }
