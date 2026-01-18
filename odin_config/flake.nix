@@ -16,12 +16,11 @@
 
   outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, ... } @inputs: {
 
-    # installerImages = nixos-raspberrypi.installerImages.rpi5;
+    installerImages = nixos-raspberrypi.installerImages.rpi5;
 
     nixosConfigurations.odin = nixos-raspberrypi.lib.nixosSystemFull {
       specialArgs = inputs;
       modules = [
-        nixos-raspberrypi.nixosModules.raspberry-pi-5
         ./configuration.nix
       ];
     };
