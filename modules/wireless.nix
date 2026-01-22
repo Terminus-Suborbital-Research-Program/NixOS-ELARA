@@ -1,4 +1,4 @@
-{ config, pkgs, ... }: {
+{ config, pkgs, lib, ... }: {
 
   services.avahi = {
     enable = true;
@@ -10,6 +10,8 @@
     };
   };
 
+  hardware.enableRedistributableFirmware = true;
+  networking.networkmanager.enable = lib.mkOverride 0 false;
   networking.wireless = {
     enable = true;
     networks."Staff5".pskRaw =

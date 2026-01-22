@@ -29,16 +29,14 @@
     # packages.x86_64-linux.odin-image = 
     # self.nixosConfigurations.odin.config.system.build.diskoImages;
 
-    nixosConfigurations.disko-odin = nixos-raspberrypi.lib.nixosSystemFull {
+    nixosConfigurations.odin = nixos-raspberrypi.lib.nixosSystemFull {
       specialArgs = inputs;
       modules = [
 
         nixos-raspberrypi.nixosModules.raspberry-pi-5.base
-        nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
+        # nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
         # nixos-raspberrypi.nixosModules.sd-image
-        disko.nixosModules.disko
-        ./disko-config.nix
         ./configuration.nix
 
         ({ config, pkgs, lib, ... }:
@@ -57,41 +55,6 @@
         })
       ];
     };
-
-    # Minimal installer image. I may remove this later
-    installerImages.rpi5 = (nixos-raspberrypi.lib.nixosInstaller {
-      specialArgs = inputs;
-      modules = [
-        nixos-raspberrypi.nixosModules.raspberry-pi-5.base
-
-        ({ config, pkgs, lib, ... }: {
- 
-          system.stateVersion = "25.11";
-
-          hardware.enableRedistributableFirmware = true;
-
-          networking.networkmanager.enable = lib.mkOverride 0 false;
-          networking.wireless = {
-            enable = true;
-            networks."Staff5".pskRaw =
-              "66fe08674eda745336a1ac1dddf2e7fef7d1374a6c73184194a05332e0648ff1";
-            networks."Pixel_8877".pskRaw =
-              "8f866ba6b78b2fc0ba26bf81b232f02f7b4f4f0141018507e0bd9e2761dbd9b4";
-          };
-          
-
-          users.users.nixos.openssh.authorizedKeys.keys = [
-            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFXPxcaJrD7Lu2P1/CxCwoKySNrszKuXgJteVZFo9vk3 supergoodname77@cachyos-x8664"
-          ];
-
-          # rpi5-installer.local
-          services.avahi.enable = true;
-          services.avahi.nssmdns4 = true;
-          services.avahi.publish.enable = true;
-          services.avahi.publish.addresses = true;
-        })
-      ];
-    }).config.system.build.sdImage;
 
     installerImages.odin = (nixos-raspberrypi.lib.nixosInstaller {
       specialArgs = inputs;
