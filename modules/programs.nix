@@ -1,7 +1,6 @@
 { pkgs, ... }: {
   
   environment.systemPackages = with pkgs; [
-    # System Tools
     # git 
     lazygit
     htop 
@@ -11,12 +10,10 @@
     usbutils 
     pciutils
     
-    # Rust Development
     (rust-bin.stable.latest.default.override { 
       extensions = [ "rust-src" "rust-analyzer" ]; 
     })
     
-    # SDR & Radio Astronomy
     soapysdr 
     soapyairspy 
     airspy 
@@ -26,6 +23,5 @@
     pkg-config
   ];
 
-  # Udev rules for SDR hardware
   services.udev.packages = [ pkgs.airspy pkgs.rtl-sdr ];
 }

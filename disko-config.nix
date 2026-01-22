@@ -3,7 +3,7 @@
   disko.devices = {
     disk = {
       main = {
-        # CFor SD cards, this is usually /dev/mmcblk0
+        # For SD cards, this is usually /dev/mmcblk0
         device = "/dev/mmcblk0"; 
         type = "disk";
         content = {

@@ -29,14 +29,12 @@
     # packages.x86_64-linux.odin-image = 
     # self.nixosConfigurations.odin.config.system.build.diskoImages;
 
-    nixosConfigurations.disk-odin = nixos-raspberrypi.lib.nixosSystemFull {
+    nixosConfigurations.disko-odin = nixos-raspberrypi.lib.nixosSystemFull {
       specialArgs = inputs;
       modules = [
 
-        # nixos-raspberrypi.nixosModules.raspberry-pi-5
         nixos-raspberrypi.nixosModules.raspberry-pi-5.base
         nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
-        # nixos-raspberrypi.nixosModules.raspberry-pi-5-page-size-16k
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
         # nixos-raspberrypi.nixosModules.sd-image
         disko.nixosModules.disko
@@ -60,39 +58,18 @@
       ];
     };
 
+    # Minimal installer image. I may remove this later
     installerImages.rpi5 = (nixos-raspberrypi.lib.nixosInstaller {
       specialArgs = inputs;
       modules = [
         nixos-raspberrypi.nixosModules.raspberry-pi-5.base
 
         ({ config, pkgs, lib, ... }: {
-          # networking.wireless.iwd.enable = true;
-          
-          # networking.wireless.iwd.settings = {
-          #   KnownNetworks = {
-          #     "Staff5" = "66fe08674eda745336a1ac1dddf2e7fef7d1374a6c73184194a05332e0648ff1"; # Using your pskRaw from earlier
-          #     "Pixel_8877" = "8f866ba6b78b2fc0ba26bf81b232f02f7b4f4f0141018507e0bd9e2761dbd9b4";
-          #   };
-          # };
-          boot.kernelParams = [ "copytoram" ];
+ 
           system.stateVersion = "25.11";
 
           hardware.enableRedistributableFirmware = true;
 
-          # networking.wireless.enable = false; 
-          # networking.wireless.iwd = {
-          #   enable = true;
-          #   settings = {
-          #     Network = {
-          #       EnableIPv6 = true;
-          #       RoutePriorityOffset = 300;
-          #     };
-          #     Settings = {
-          #       AutoConnect = true;
-          #     };
-          #   };
-          # };
-          # networking.networkmanager.enable = lib.mkForce false;
           networking.networkmanager.enable = lib.mkOverride 0 false;
           networking.wireless = {
             enable = true;
@@ -100,7 +77,6 @@
               "66fe08674eda745336a1ac1dddf2e7fef7d1374a6c73184194a05332e0648ff1";
             networks."Pixel_8877".pskRaw =
               "8f866ba6b78b2fc0ba26bf81b232f02f7b4f4f0141018507e0bd9e2761dbd9b4";
-            networks."MoonAndStars".psk = "CatholicAndHeretic";
           };
           
 
@@ -113,6 +89,37 @@
           services.avahi.nssmdns4 = true;
           services.avahi.publish.enable = true;
           services.avahi.publish.addresses = true;
+        })
+      ];
+    }).config.system.build.sdImage;
+
+    installerImages.odin = (nixos-raspberrypi.lib.nixosInstaller {
+      specialArgs = inputs;
+      modules = [
+        # nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
+        nixos-raspberrypi.nixosModules.raspberry-pi-5.base
+        nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
+        ({ pkgs, ... }: {
+          nixpkgs.overlays = [ (import rust-overlay) ];
+        })
+        ./configuration.nix
+
+        # Disable specific unit tests from gjs triggered by the display-vc4
+        # For some reason the last two always file, maybe because of the sandbox nix builds
+        # stuff in, but either way it breaks every build including vc4 when not disabled
+        ({ config, pkgs, lib, ... }:
+        {
+          nixpkgs.overlays = [
+            (self: super: {
+              gjs = super.gjs.overrideAttrs (oldAttrs: {
+                # This tells the Meson build system to STFU about GTK
+                mesonFlags = (oldAttrs.mesonFlags or []) ++ [ "-Dskip_gtk_tests=true" ];
+                doCheck = false;
+                doInstallCheck = false;
+                checkPhase = "true";
+              });
+            })
+          ];
         })
       ];
     }).config.system.build.sdImage;

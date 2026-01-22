@@ -3,7 +3,7 @@
 {
   imports = [
     ./hardware/hardware-pi-5.nix
-    ./hardware/kernel.nix
+    # ./hardware/kernel.nix
     ./hardware/pi5-configtxt.nix
     ./modules/programs.nix
     ./modules/user.nix
@@ -19,12 +19,6 @@
   networking.hostName = "odin-compute";
   # networking.useNetworkd = true;
   # networking.wireless.iwd = { enable = true; settings.Settings.AutoConnect = true; };
-  
-  # users.users.nixos = {
-  #   isNormalUser = true;
-  #   extraGroups = [ "wheel" "networkmanager" "plugdev" "dialout" ];
-  #   initialHashedPassword = ""; 
-  # };
   
   security.sudo.wheelNeedsPassword = false;
   services.openssh.enable = true;
