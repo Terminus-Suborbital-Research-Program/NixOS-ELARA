@@ -2,7 +2,8 @@
 
 let
   # Cached Kernel Definition
-  kernelBundle = pkgs.linuxAndFirmware.v6_12_44; 
+  # kernelBundle = pkgs.linuxAndFirmware.v6_12_34; 
+  kernelBundle = pkgs.linuxAndFirmware.v6_6_31;
 in {
   
   boot.loader.raspberryPi.firmwarePackage = kernelBundle.raspberrypifw;

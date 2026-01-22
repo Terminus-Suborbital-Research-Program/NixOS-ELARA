@@ -2,7 +2,8 @@
   
   environment.systemPackages = with pkgs; [
     # System Tools
-    git 
+    # git 
+    lazygit
     htop 
     tmux 
     wget 
