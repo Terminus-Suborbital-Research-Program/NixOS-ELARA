@@ -11,6 +11,7 @@
     environment.systemPackages = [
       soapyextra
     ] ++ (with pkgs; [
+      git
       lazygit
       htop 
       tmux 
