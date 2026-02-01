@@ -1,18 +1,6 @@
 {
   description = "ODIN Flight Software System";
 
-  nixConfig = {
-    extra-substituters = [ 
-    "https://nixos-raspberrypi.cachix.org" 
-    "https://terminus.cachix.org" 
-    ];
-    extra-trusted-public-keys = [
-       "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI=" 
-       "terminus.cachix.org-1:UjZ4GF7MykvHYub8KHNNZs8D83XY2OiVFgHGzkIpkFI="
-       ];
-    connect-timeout = 5;
-  };
-
   inputs = {
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-25.11";
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";

@@ -1,6 +1,21 @@
 { config, pkgs, ... }:
 
 {
+    nix.settings = {
+    substituters = [
+      "https://cache.nixos.org"
+      "https://nixos-raspberrypi.cachix.org"
+      "https://terminus.cachix.org"
+    ];
+
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
+      "terminus.cachix.org-1:UjZ4GF7MykvHYub8KHNNZs8D83XY2OiVFgHGzkIpkFI="
+    ];
+  };
+
+
   imports = [
     ./hardware/hardware-pi-5.nix
     # ./hardware/kernel.nix
