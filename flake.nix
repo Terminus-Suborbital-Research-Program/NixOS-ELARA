@@ -45,6 +45,7 @@
             after = [ "systemd-tmpfiles-setup.service" ];
             path = [ radiaread ];
             serviceConfig = {
+              User = "terminus";
               WorkingDirectory = "/home/terminus/rad_data";
               ExecStart = "${radiaread}/bin/radiaread /home/terminus/rad_data";
               Restart = "always";
