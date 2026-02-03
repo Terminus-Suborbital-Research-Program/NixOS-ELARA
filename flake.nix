@@ -7,13 +7,10 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
-    };
+    guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
   };
 
-  outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, disko
+  outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
             , nixos-anywhere, ... } @inputs: {
 
     # packages.x86_64-linux.odin-image = self.nixosConfigurations.odin.config.system.build.sdImage;
@@ -31,8 +28,31 @@
         # nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
         # nixos-raspberrypi.nixosModules.sd-image
-        ({ pkgs, ... }: {
+        ({ pkgs, ... }: 
+        let 
+        # Extract the package for the Pi's architecture
+        radiaread = guard.packages.aarch64-linux.radiaread;
+        in {
           nixpkgs.overlays = [ (import rust-overlay) ];
+          environment.systemPackages = [ radiaread ];
+
+          systemd.tmpfiles.rules = [
+            "d /home/terminus/rad_data 0755 terminus terminus - -"
+          ];
+
+          systemd.services.radiaread = {
+            description = "Terminus Radiacode Data Reader";
+            after = [ "systemd-tmpfiles-setup.service" ];
+            path = [ radiaread ];
+            serviceConfig = {
+              WorkingDirectory = "/home/terminus/rad_data";
+              ExecStart = "${radiaread}/bin/radiaread /home/terminus/rad_data";
+              Restart = "always";
+              RestartSec = "20s";
+              Group = "dialout";
+            };
+            wantedBy = [ "multi-user.target" ];
+          }
         })
         ./configuration.nix
 
