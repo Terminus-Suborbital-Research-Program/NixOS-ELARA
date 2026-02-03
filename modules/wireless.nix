@@ -10,8 +10,17 @@
     };
   };
 
+  services.zerotierone = {
+    enable = true;
+    joinNetworks = [ "a581878f7d3a5d76" ];
+  };
+
+  services.openssh.enable = true;
+
+
   hardware.enableRedistributableFirmware = true;
   networking.networkmanager.enable = lib.mkOverride 0 false;
+  networking.useDHCP = lib.mkDefault true;
   networking.wireless = {
     enable = true;
     networks."Student5".pskRaw =

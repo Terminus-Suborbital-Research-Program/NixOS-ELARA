@@ -31,12 +31,12 @@
   nixpkgs.config.allowUnfree = true;
 
   hardware.enableRedistributableFirmware = true;
-  networking.hostName = "odin-compute";
+
+  networking.hostName = "odin";
   # networking.useNetworkd = true;
   # networking.wireless.iwd = { enable = true; settings.Settings.AutoConnect = true; };
   
   security.sudo.wheelNeedsPassword = false;
-  services.openssh.enable = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
 }
