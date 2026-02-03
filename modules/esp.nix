@@ -47,7 +47,11 @@ in
   # cfg80211 should be loading in with networking.wireless, but if it's not loading before
   # the driver then I should try explicit import
 
-  boot.kernelModules = [ "esp32_spi" ]; # check the .ko name at
+  boot.kernelModules = [ "esp32_spi" ]; # check the .ko with 
+  # ls -R /run/current-system/kernel-modules/lib/modules/$(uname -r)/
+  # or 
+  # find /run/current-system/kernel-modules/ -name "*.ko" | grep -E "esp|morse"
+
   # /run/booted-system/kernel-modules/lib/modules/$(uname -r)/kernel/drivers/net/wireless/esp32_spi.ko
   # check loading with lsmod | grep esp32
 
