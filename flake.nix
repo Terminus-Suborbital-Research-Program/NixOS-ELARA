@@ -52,7 +52,7 @@
               Group = "dialout";
             };
             wantedBy = [ "multi-user.target" ];
-          }
+          };
         })
         ./configuration.nix
 
