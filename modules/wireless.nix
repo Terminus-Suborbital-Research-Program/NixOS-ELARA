@@ -17,6 +17,8 @@
 
   services.openssh.enable = true;
 
+  hardware.bluetooth.enable = true;
+
 
   hardware.enableRedistributableFirmware = true;
   networking.networkmanager.enable = lib.mkOverride 0 false;

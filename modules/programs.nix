@@ -31,6 +31,12 @@
       libgpiod
       i2c-tools
 
+      # raspberrypi-utils 
+      # bluez
+      # bluez-tools
+      util-linux
+      bc
+
       # Sensing
       soapysdr 
       soapyairspy 
