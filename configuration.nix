@@ -25,7 +25,13 @@
     ./modules/wireless.nix
   ];
 
+ 
   system.stateVersion = "25.11";# Pinned, DON"T CHANGE
+
+  services.udev.extraRules = ''
+    # /etc/udev/rules.d/99-radiacode.rules
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="f123", MODE="0660", GROUP="dialout", SYMLINK+="radia_code"
+  '';
 
   # General Config
   nixpkgs.config.allowUnfree = true;
