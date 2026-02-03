@@ -47,6 +47,7 @@
             serviceConfig = {
               User = "terminus";
               WorkingDirectory = "/home/terminus/rad_data";
+              ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /home/terminus/rad_data";
               ExecStart = "${radiaread}/bin/radiaread /home/terminus/rad_data";
               Restart = "always";
               RestartSec = "20s";
