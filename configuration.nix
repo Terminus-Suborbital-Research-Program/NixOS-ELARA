@@ -20,6 +20,7 @@
     ./hardware/hardware-pi-5.nix
     # ./hardware/kernel.nix
     ./hardware/pi5-configtxt.nix
+    ./modules/radiacode.nix
     ./modules/programs.nix
     ./modules/user.nix
     ./modules/wireless.nix

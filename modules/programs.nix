@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }: 
+{ config, pkgs, lib, rust-overlay, ... }: 
   let
     soapyextra = pkgs.soapysdr.override {
       extraPackages = [ 
@@ -8,6 +8,8 @@
     };
   in 
   {
+    nixpkgs.overlays = [ (import rust-overlay) ];
+
     environment.systemPackages = [
       soapyextra
     ] ++ (with pkgs; [
