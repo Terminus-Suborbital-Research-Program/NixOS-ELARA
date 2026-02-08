@@ -7,13 +7,10 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
-    };
+    guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
   };
 
-  outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, disko
+  outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
             , nixos-anywhere, ... } @inputs: {
 
     # packages.x86_64-linux.odin-image = self.nixosConfigurations.odin.config.system.build.sdImage;
@@ -31,9 +28,6 @@
         # nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
         # nixos-raspberrypi.nixosModules.sd-image
-        ({ pkgs, ... }: {
-          nixpkgs.overlays = [ (import rust-overlay) ];
-        })
         ./configuration.nix
 
         ({ config, pkgs, lib, ... }:
