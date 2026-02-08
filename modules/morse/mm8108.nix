@@ -7,14 +7,12 @@ morseFirmware = pkgs.stdenv.mkDerivation {
     src = pkgs.fetchFromGitHub {
       owner = "MorseMicro";
       repo = "morse-firmware";
-      rev = "master"; # Ideally, find a specific tag/commit hash for flight stability
-      sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Run install once to get the real hash
+      rev = "master"; # Ideally find a specific tag/commit hash 
+      sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     };
 
-    # We skip the 'buildPhase' because there is nothing to compile (they are just binaries)
     dontBuild = true;
 
-    # We manually install to avoid the Makefile trying to write to /lib/firmware
     installPhase = ''
       mkdir -p $out/lib/firmware/morse
 
