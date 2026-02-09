@@ -8,22 +8,20 @@ morseFirmware = pkgs.stdenv.mkDerivation {
       owner = "MorseMicro";
       repo = "morse-firmware";
       rev = "master"; # Ideally find a specific tag/commit hash 
-      sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      sha256 = "sha256-KgWL8Yx1V3Q5Ylz1SjaM/ZoD2OhToyBQaCCDDlwHYqw=";
     };
 
     dontBuild = true;
 
     installPhase = ''
+
       mkdir -p $out/lib/firmware/morse
 
-      # 1. Copy the core firmware (the "brain")
-      cp mm8108_release.bin $out/lib/firmware/morse/
+      cp ./firmware/mm8108b2-rl.bin $out/lib/firmware/morse/
+ 
+      cp ./bcf/morsemicro/bcf_mf15457.bin $out/lib/firmware/morse/
 
-      # 2. Copy all BCFs so they are available for manual switching
-      cp bcf_mm8108_mf15457_*.bin $out/lib/firmware/morse/
-
-      # 3. CRITICAL: Symlink the MF15457 US config to the default
-      ln -s $out/lib/firmware/morse/bcf_mm8108_mf15457_us.bin $out/lib/firmware/morse/bcf_default.bin
+      ln -s $out/lib/firmware/morse/bcf_mf15457.bin $out/lib/firmware/morse/bcf_default.bin
     '';
   };
   in {

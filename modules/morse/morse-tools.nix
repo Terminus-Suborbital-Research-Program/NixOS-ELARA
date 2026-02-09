@@ -8,18 +8,17 @@ morseCli = pkgs.stdenv.mkDerivation {
     owner = "MorseMicro";
     repo = "morse_cli";
     rev = "master"; 
-    sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    sha256 = "sha256-EhrKMMbWJ6gweAt2EudyO7vHZ9ITjRYagE4k+QuUnOo=";
   };
 
-  nativeBuildInputs = [ pkgs.pkg-config ];
+  nativeBuildInputs = [ pkgs.pkg-config pkgs.debianutils ];
   buildInputs = [ pkgs.libnl pkgs.libusb1 ];
-
-  # Fix hardcoded paths in Makefile if necessary, or just run make
-  # The guide specifies this config flag 
-  buildPhase = ''
-    make CONFIG_MORSE_TRANS_NL80211=1
-  '';
-
+postUnpack = "chmod -R u+w source";
+buildPhase = ''
+export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.libusb1.dev}/include/libusb-1.0 -Wno-error -Wno-unused-result"
+    
+       make CONFIG_MORSE_TRANS_NL80211=1
+'';
   installPhase = ''
     mkdir -p $out/bin
     cp morse_cli $out/bin/
@@ -59,17 +58,21 @@ wpaSupplicantS1G = pkgs.stdenv.mkDerivation {
   src = pkgs.fetchFromGitHub {
     owner = "MorseMicro";
     repo = "hostap";
-    rev = "master"; # driver release version
-    sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    rev = "refs/heads/v1.15"; # driver release version
+    sha256 = "sha256-IOJore8wkMGcNFZ+87QuEZLJOmf2yo33jE2zhKTCaKE=";
+    fetchSubmodules = true;
   };
 
   nativeBuildInputs = [ pkgs.pkg-config ];
-  buildInputs = [ pkgs.libnl pkgs.openssl ];
-
- 
+  buildInputs = [ pkgs.libnl pkgs.openssl pkgs.dbus ];
+postUnpack = "chmod -R u+w source";
+preBuild = ''
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE $(pkg-config --cflags dbus-1)"
+    export NIX_LDFLAGS="$NIX_LDFLAGS $(pkg-config --libs dbus-1)"
+  '';
+setSourceRoot = "sourceRoot=`echo source/wpa_supplicant`"; 
     configurePhase = ''
-
-      cd wpa_supplicant
+      ls
 
       # Start with the defconfig if it exists, or create new
       if [ -f defconfig ]; then
@@ -105,25 +108,22 @@ wpaSupplicantS1G = pkgs.stdenv.mkDerivation {
     '';
 
   buildPhase = ''
-    cd wpa_supplicant
+#make BINDIR=$out/sbin \
+#          EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include" \
+#          LIBS="-lnl-3 -lnl-genl-3 -lssl -lcrypto -ldbus-1"
 
-    make BINDIR=$out/sbin \
-          CFLAGS="-I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include" \
-          LIBS="-lnl-3 -lnl-genl-3 -lssl -lcrypto"
+make -j$(nproc) BINDIR=$out/sbin \
+         EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include -I${pkgs.dbus.dev}/include/dbus-1.0 -I${pkgs.dbus.lib}/lib/dbus-1.0/include" \
+         LIBS="-lnl-3 -lnl-genl-3 -lnl-route-3 -lssl -lcrypto -ldbus-1"
   '';
 
   installPhase = ''
-    cd wpa_supplicant
     
     mkdir -p $out/sbin
-    # The guide says these binaries are produced 
-    #cp wpa_supplicant_s1g $out/sbin/
-    #cp wpa_cli_s1g $out/sbin/
-    #cp wpa_passphrase_s1g $out/sbin/
 
-    cp wpa_supplicant $out/sbin/wpa_supplicant_s1g
-    cp wpa_cli $out/sbin/wpa_cli_s1g
-    cp wpa_passphrase $out/sbin/wpa_passphrase_s1g
+    cp wpa_supplicant_s1g $out/sbin/wpa_supplicant_s1g
+    cp wpa_cli_s1g $out/sbin/wpa_cli_s1g
+    cp wpa_passphrase_s1g $out/sbin/wpa_passphrase_s1g
   '';
 
   
