@@ -140,8 +140,10 @@ in {
   environment.etc."morse/wpa_supplicant.conf".text = wpaConfContent;
 
   systemd.services.morse-supplicant = {
+    bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
+    after = [ "sys-subsystem-net-devices-wlan1.device" ];
     description = "Morse Micro HaLow Supplicant (S1G + P2P)";
-    after = [ "network.target" ];
+    # after = [ "network.target" ];
     wantedBy = [ "multi-user.target" ];
     
     serviceConfig = {
