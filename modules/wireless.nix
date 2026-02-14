@@ -22,7 +22,6 @@
   networking.networkmanager.enable = lib.mkOverride 0 false;
   networking.useDHCP = lib.mkDefault true;
   networking.wireless = {
-    interfaces = [ "wlan0" ];
     enable = true;
     networks."Student5".pskRaw =
       "6b478d4e5dd413b48e554afe74144e44823cf57bc183d19d7d410d0737c35fa1";
