@@ -1,24 +1,24 @@
 { config, pkgs, lib, ... }:
 let
 morseCli = pkgs.stdenv.mkDerivation {
-  pname = "morse-cli";
+  pname = "tevs-driver";
   version = "1.16.4"; 
 
   src = pkgs.fetchFromGitHub {
-    owner = "MorseMicro";
-    repo = "morse_cli";
+    owner = "TechNixion-Vision";
+    repo = "tn-rpi-camera-driver";
     rev = "master"; 
     sha256 = "sha256-EhrKMMbWJ6gweAt2EudyO7vHZ9ITjRYagE4k+QuUnOo=";
   };
 
   nativeBuildInputs = [ pkgs.pkg-config pkgs.debianutils ];
   buildInputs = [ pkgs.libnl pkgs.libusb1 ];
-postUnpack = "chmod -R u+w source";
-buildPhase = ''
-export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.libusb1.dev}/include/libusb-1.0 -Wno-error -Wno-unused-result"
-    
-       make CONFIG_MORSE_TRANS_NL80211=1
-'';
+  postUnpack = "chmod -R u+w source";
+  buildPhase = ''
+  export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.libusb1.dev}/include/libusb-1.0 -Wno-error -Wno-unused-result"
+      
+        make CONFIG_MORSE_TRANS_NL80211=1
+  '';
   installPhase = ''
     mkdir -p $out/bin
     cp morse_cli $out/bin/
@@ -26,30 +26,6 @@ export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${pkgs.libnl.dev}/include/libnl
   '';
 };
 
-wpaConfContent = ''
-    ctrl_interface=/var/run/wpa_supplicant_s1g
-    ctrl_interface_group=wheel
-    update_config=1
-    country=US
-    
-    # S1G / HaLow Specifics
-    pmf=2
-    sae_pwe=1
-    
-    # P2P Settings
-    device_name=ODIN_Flight_Computer
-    device_type=1-0050F204-1
-    config_methods=virtual_display virtual_push_button keypad
-    
-    # Station Network Block (from APPNOTE-24 example)
-    network={
-        ssid="MorseMicro"
-        key_mgmt=SAE
-        pairwise=CCMP
-        psk="12345678"
-        priority=2
-    }
-  '';
 
 wpaSupplicantS1G = pkgs.stdenv.mkDerivation {
   pname = "wpa-supplicant-s1g";
