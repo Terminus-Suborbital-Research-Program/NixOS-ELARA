@@ -1,140 +1,86 @@
 { config, pkgs, lib, ... }:
+
 let
-morseCli = pkgs.stdenv.mkDerivation {
-  pname = "tevs-driver";
-  version = "1.16.4"; 
+  # Access your pinned kernel headers
+  kernel = config.boot.kernelPackages.kernel;
 
-  src = pkgs.fetchFromGitHub {
-    owner = "TechNixion-Vision";
+  tevs-driver-src = pkgs.fetchFromGitHub {
+    owner = "TechNexion-Vision";
     repo = "tn-rpi-camera-driver";
-    rev = "master"; 
-    sha256 = "sha256-EhrKMMbWJ6gweAt2EudyO7vHZ9ITjRYagE4k+QuUnOo=";
+    rev = "tn_rpi_kernel-6.6"; 
+    sha256 = "sha256-mpmywww4bw88f49a2x8sdl5c0rxnpcxcaaaaaaaaaaa="; # Use actual hash
   };
 
-  nativeBuildInputs = [ pkgs.pkg-config pkgs.debianutils ];
-  buildInputs = [ pkgs.libnl pkgs.libusb1 ];
-  postUnpack = "chmod -R u+w source";
-  buildPhase = ''
-  export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.libusb1.dev}/include/libusb-1.0 -Wno-error -Wno-unused-result"
-      
-        make CONFIG_MORSE_TRANS_NL80211=1
-  '';
-  installPhase = ''
-    mkdir -p $out/bin
-    cp morse_cli $out/bin/
-    # Symlink morsectrl if compiled
-  '';
-};
+  tevs-module = pkgs.stdenv.mkDerivation {
+    pname = "tevs-driver";
+    version = "6.6.y";
+    src = tevs-driver-src;
+
+    nativeBuildInputs = [ pkgs.bc pkgs.gnumake ] ++ kernel.moduleBuildDependencies;
 
 
-wpaSupplicantS1G = pkgs.stdenv.mkDerivation {
-  pname = "wpa-supplicant-s1g";
-  version = "1.16.4";
-
-  src = pkgs.fetchFromGitHub {
-    owner = "MorseMicro";
-    repo = "hostap";
-    rev = "refs/heads/v1.15"; # driver release version
-    sha256 = "sha256-IOJore8wkMGcNFZ+87QuEZLJOmf2yo33jE2zhKTCaKE=";
-    fetchSubmodules = true;
-  };
-
-  nativeBuildInputs = [ pkgs.pkg-config ];
-  buildInputs = [ pkgs.libnl pkgs.openssl pkgs.dbus ];
-postUnpack = "chmod -R u+w source";
-preBuild = ''
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE $(pkg-config --cflags dbus-1)"
-    export NIX_LDFLAGS="$NIX_LDFLAGS $(pkg-config --libs dbus-1)"
-  '';
-setSourceRoot = "sourceRoot=`echo source/wpa_supplicant`"; 
-    configurePhase = ''
-      ls
-
-      # Start with the defconfig if it exists, or create new
-      if [ -f defconfig ]; then
-        cp defconfig .config
-      else
-        touch .config
-      fi
-
-      # Inject the critical P2P and Driver settings
-      cat >> .config <<EOF
-      CONFIG_DRIVER_NL80211=y
-      CONFIG_LIBNL32=y
-      CONFIG_CTRL_IFACE=y
-      CONFIG_CTRL_IFACE_DBUS_NEW=y
-      CONFIG_CTRL_IFACE_DBUS_INTRO=y
-      
-      # Security & S1G
-      CONFIG_SAE=y
-      CONFIG_S1G=y
-      CONFIG_OWE=y
-      CONFIG_SUITEB192=y
-      
-      # P2P (Wi-Fi Direct) Stack
-      CONFIG_P2P=y
-      CONFIG_AP=y
-      CONFIG_WPS=y
-      CONFIG_WIFI_DISPLAY=y
-      
-      # Debugging
-      CONFIG_DEBUG_FILE=y
-      CONFIG_DEBUG_SYSLOG=y
-      EOF
+    buildPhase = ''
+      cd drivers/media/i2c
+      make -C ${kernel.dev}/lib/modules/${kernel.modDirVersion}/build \
+        M=$(pwd) \
+        modules
     '';
 
-  buildPhase = ''
-#make BINDIR=$out/sbin \
-#          EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include" \
-#          LIBS="-lnl-3 -lnl-genl-3 -lssl -lcrypto -ldbus-1"
+    installPhase = ''
+      mkdir -p $out/lib/modules/${kernel.modDirVersion}/extra
+      cp tevs.ko $out/lib/modules/${kernel.modDirVersion}/extra/
+    '';
+  };
 
-make -j$(nproc) BINDIR=$out/sbin \
-         EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include -I${pkgs.dbus.dev}/include/dbus-1.0 -I${pkgs.dbus.lib}/lib/dbus-1.0/include" \
-         LIBS="-lnl-3 -lnl-genl-3 -lnl-route-3 -lssl -lcrypto -ldbus-1"
-  '';
+  tevs-overlay = pkgs.stdenv.mkDerivation {
+    pname = "tevs-overlay";
+    version = "6.6.y";
+    src = tevs-driver-src;
 
-  installPhase = ''
-    
-    mkdir -p $out/sbin
+    nativeBuildInputs = [ pkgs.dtc ];
 
-    cp wpa_supplicant_s1g $out/sbin/wpa_supplicant_s1g
-    cp wpa_cli_s1g $out/sbin/wpa_cli_s1g
-    cp wpa_passphrase_s1g $out/sbin/wpa_passphrase_s1g
-  '';
+    buildPhase = ''
+      cd arch/arm64/boot/dts/overlays
+      # Compile the .dts into a .dtbo
+      dtc -@ -I dts -O dtb -o tevs-rpi22.dtbo tevs-rpi22-overlay.dts
+    '';
 
-  
-};
+    installPhase = ''
+      mkdir -p $out
+      cp tevs-rpi22.dtbo $out/
+    '';
+  };
+
 in {
-  environment.systemPackages = [
-    morseCli 
-    wpaSupplicantS1G 
-    pkgs.iw 
-    pkgs.libnl 
-    pkgs.openssl
-  ];
+  # Load the compiled module into the kernel
+  boot.extraModulePackages = [ tevs-module ];
+  boot.kernelModules = [ "tevs" ];
 
-  environment.etc."morse/wpa_supplicant.conf".text = wpaConfContent;
+  # Apply the compiled Device Tree Overlay
+  hardware.deviceTree = {
+    enable = true;
+    overlays = [
+      {
+        name = "tevs-rpi22";
+        dtboFile = "${tevs-overlay}/tevs-rpi22.dtbo";
+      }
+    ];
+  };
 
-  systemd.services.morse-supplicant = {
-    bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
-    after = [ "sys-subsystem-net-devices-wlan1.device" ];
-    description = "Morse Micro HaLow Supplicant (S1G + P2P)";
-    # after = [ "network.target" ];
-    wantedBy = [ "multi-user.target" ];
+  # Configure Raspberry Pi specific boot flags (config.txt)
+  hardware.raspberry-pi.config.all.options = {
+    camera_auto_detect = {
+      enable = true;
+      value = 0;
+    };
     
-    serviceConfig = {
-      Type = "simple";
-      User = "root"; 
-      RuntimeDirectory = "wpa_supplicant_s1g"; 
-      
-      # -D nl80211 : Use the modern Linux wireless driver
-      # -i wlan1   : The interface name (verify this on your device!)
-      # -c ...     : The config file path
-      # -s         : Output to syslog (journalctl)
-      ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan1 -c/etc/morse/wpa_supplicant.conf -s";
-      
-      Restart = "always";
-      RestartSec = "5s";
+    "dtoverlay=tevs-rpi22" = {
+      enable = true;
+      value = "cam0"; 
     };
   };
+
+  boot.extraModprobeConfig = ''
+    softdep tevs pre: gpio_pca953x
+  '';
 }

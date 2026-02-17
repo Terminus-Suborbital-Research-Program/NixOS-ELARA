@@ -24,6 +24,7 @@
     ./modules/programs.nix
     ./modules/user.nix
     ./modules/wireless.nix
+    ./modules/tevs.nix
   ];
 
  
