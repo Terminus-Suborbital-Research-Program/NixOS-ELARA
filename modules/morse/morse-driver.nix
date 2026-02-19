@@ -66,13 +66,36 @@ in
   
   boot.kernelModules = [ "dot11ah" "morse" ];
 
+  # boot.kernelPackages = pkgs.linuxPackages_rpi5.extend (self: super: {
+  #   kernel = super.kernel.override {
+  #     argsOverride = rec {
+  #       version = "6.12.21";
+  #       modDirVersion = "${version}-stable_20250220"; 
+
+  #       src = pkgs.fetchFromGitHub {
+  #         owner = "raspberrypi";
+  #         repo = "linux";
+  #         # 6.12.21 
+  #         rev = "3423cae6907838f760aada1a72bb6e378ebaa16d"; 
+  #         hash = "sha256-CItjO1ZoQKzkleD5O4k7cTn9YGWGQ2rNoLHZBfZ3ufI="; 
+  #       };
+  #     };
+  #   };
+  # });
+
+  # boot.kernelPatches = [
+  #   {
+  #     name = "morse-micro-s1g-support";
+  #     patch = pkgs.fetchurl {
+  #       url = "https://github.com/raspberrypi/linux/compare/rpi-6.12.y...MorseMicro:rpi-linux:mm/rpi-6.12.21/1.16.x.patch";
+  #       sha256 = "sha256-zskyBxJDr2GK52yGr7qbs3eT0AvfaOdxJ3UU1e2Gw/I=";
+  #     };
+  #   }
+  # ];
   boot.kernelPatches = [
     {
-      name = "morse-micro-s1g-support";
-      patch = pkgs.fetchurl {
-        url = "https://github.com/raspberrypi/linux/compare/rpi-6.6.y...MorseMicro:rpi-linux:mm/rpi-6.6.31/1.16.x.patch";
-        sha256 = "sha256-zskyBxJDr2GK52yGr7qbs3eT0AvfaOdxJ3UU1e2Gw/I=";
-      };
+      name = "morse-micro-s1g-support-rebased";
+      patch = ./morse-6.12.34-fixed.patch; 
     }
   ];
 }
