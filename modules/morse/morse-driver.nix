@@ -77,7 +77,7 @@ in
           repo = "linux";
           # 6.12.21 
           rev = "stable_20250428";
-          hash = "sha256-jVvJJJP4wSJm91j0z8QMXIujjGZ+IisTMCvusxarons="; 
+          hash = "sha256-jVvJJJP4wSJm91jOz8QMXIujjGZ+IisTMCvusxarons="; 
         };
       };
     };
