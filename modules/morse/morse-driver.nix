@@ -69,8 +69,8 @@ in
   boot.kernelPackages = pkgs.linuxPackages_rpi5.extend (self: super: {
     kernel = super.kernel.override {
       argsOverride = rec {
-        version = "6.12.21";
-        modDirVersion = "${version}-stable_20250428"; 
+        version = "6.12.25";
+        modDirVersion = "6.12.25";
 
         src = pkgs.fetchFromGitHub {
           owner = "raspberrypi";
@@ -82,6 +82,8 @@ in
       };
     };
   });
+
+  #         modDirVersion = "${version}-stable_20250428"; 
 
   # rev = "3423cae6907838f760aada1a72bb6e378ebaa16d"; 
 
