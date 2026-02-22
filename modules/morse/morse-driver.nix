@@ -77,11 +77,13 @@ in
           repo = "linux";
           # 6.12.21 
           rev = "stable_20250428";
-          hash = "sha256-CItjO1ZoQKzkleD5O4k7cTn9YGWGQ2rNoLHZBfZ3ufI="; 
+          hash = "sha256-jVvJJJP4wSJm91j0z8QMXIujjGZ+IisTMCvusxarons="; 
         };
       };
     };
   });
+
+  # rev = "3423cae6907838f760aada1a72bb6e378ebaa16d"; 
 
   # boot.kernelPatches = [
   #   {
