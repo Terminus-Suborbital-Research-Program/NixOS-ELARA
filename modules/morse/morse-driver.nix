@@ -66,22 +66,22 @@ in
   
   boot.kernelModules = [ "dot11ah" "morse" ];
 
-  # boot.kernelPackages = pkgs.linuxPackages_rpi5.extend (self: super: {
-  #   kernel = super.kernel.override {
-  #     argsOverride = rec {
-  #       version = "6.12.21";
-  #       modDirVersion = "${version}-stable_20250220"; 
+  boot.kernelPackages = pkgs.linuxPackages_rpi5.extend (self: super: {
+    kernel = super.kernel.override {
+      argsOverride = rec {
+        version = "6.12.21";
+        modDirVersion = "${version}-stable_20250428"; 
 
-  #       src = pkgs.fetchFromGitHub {
-  #         owner = "raspberrypi";
-  #         repo = "linux";
-  #         # 6.12.21 
-  #         rev = "3423cae6907838f760aada1a72bb6e378ebaa16d"; 
-  #         hash = "sha256-CItjO1ZoQKzkleD5O4k7cTn9YGWGQ2rNoLHZBfZ3ufI="; 
-  #       };
-  #     };
-  #   };
-  # });
+        src = pkgs.fetchFromGitHub {
+          owner = "raspberrypi";
+          repo = "linux";
+          # 6.12.21 
+          rev = "stable_20250428";
+          hash = "sha256-CItjO1ZoQKzkleD5O4k7cTn9YGWGQ2rNoLHZBfZ3ufI="; 
+        };
+      };
+    };
+  });
 
   # boot.kernelPatches = [
   #   {
@@ -95,7 +95,7 @@ in
   boot.kernelPatches = [
     {
       name = "morse-micro-s1g-support-rebased";
-      patch = ./morse-6.12.34-fixed.patch; 
+      patch = ./morse-6.12.21-fixed.patch; 
     }
   ];
 }
