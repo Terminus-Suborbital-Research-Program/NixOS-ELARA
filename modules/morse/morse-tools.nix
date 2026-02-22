@@ -13,12 +13,12 @@ morseCli = pkgs.stdenv.mkDerivation {
 
   nativeBuildInputs = [ pkgs.pkg-config pkgs.debianutils ];
   buildInputs = [ pkgs.libnl pkgs.libusb1 ];
-postUnpack = "chmod -R u+w source";
-buildPhase = ''
-export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.libusb1.dev}/include/libusb-1.0 -Wno-error -Wno-unused-result"
-    
-       make CONFIG_MORSE_TRANS_NL80211=1
-'';
+  postUnpack = "chmod -R u+w source";
+  buildPhase = ''
+  export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.libusb1.dev}/include/libusb-1.0 -Wno-error -Wno-unused-result"
+      
+        make CONFIG_MORSE_TRANS_NL80211=1
+  '';
   installPhase = ''
     mkdir -p $out/bin
     cp morse_cli $out/bin/
@@ -51,9 +51,9 @@ wpaConfContent = ''
     }
   '';
 
-wpaSupplicantS1G = pkgs.stdenv.mkDerivation {
-  pname = "wpa-supplicant-s1g";
-  version = "1.16.4";
+  wpaSupplicantS1G = pkgs.stdenv.mkDerivation {
+    pname = "wpa-supplicant-s1g";
+    version = "1.16.4";
 
   src = pkgs.fetchFromGitHub {
     owner = "MorseMicro";
@@ -65,12 +65,12 @@ wpaSupplicantS1G = pkgs.stdenv.mkDerivation {
 
   nativeBuildInputs = [ pkgs.pkg-config ];
   buildInputs = [ pkgs.libnl pkgs.openssl pkgs.dbus ];
-postUnpack = "chmod -R u+w source";
-preBuild = ''
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE $(pkg-config --cflags dbus-1)"
-    export NIX_LDFLAGS="$NIX_LDFLAGS $(pkg-config --libs dbus-1)"
-  '';
-setSourceRoot = "sourceRoot=`echo source/wpa_supplicant`"; 
+  postUnpack = "chmod -R u+w source";
+  preBuild = ''
+      export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE $(pkg-config --cflags dbus-1)"
+      export NIX_LDFLAGS="$NIX_LDFLAGS $(pkg-config --libs dbus-1)"
+    '';
+  setSourceRoot = "sourceRoot=`echo source/wpa_supplicant`"; 
     configurePhase = ''
       ls
 
@@ -108,14 +108,14 @@ setSourceRoot = "sourceRoot=`echo source/wpa_supplicant`";
     '';
 
   buildPhase = ''
-#make BINDIR=$out/sbin \
-#          EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include" \
-#          LIBS="-lnl-3 -lnl-genl-3 -lssl -lcrypto -ldbus-1"
+    #make BINDIR=$out/sbin \
+    #          EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include" \
+    #          LIBS="-lnl-3 -lnl-genl-3 -lssl -lcrypto -ldbus-1"
 
-make -j$(nproc) BINDIR=$out/sbin \
-         EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include -I${pkgs.dbus.dev}/include/dbus-1.0 -I${pkgs.dbus.lib}/lib/dbus-1.0/include" \
-         LIBS="-lnl-3 -lnl-genl-3 -lnl-route-3 -lssl -lcrypto -ldbus-1"
-  '';
+    make -j$(nproc) BINDIR=$out/sbin \
+            EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include -I${pkgs.dbus.dev}/include/dbus-1.0 -I${pkgs.dbus.lib}/lib/dbus-1.0/include" \
+            LIBS="-lnl-3 -lnl-genl-3 -lnl-route-3 -lssl -lcrypto -ldbus-1"
+      '';
 
   installPhase = ''
     

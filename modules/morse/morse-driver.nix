@@ -75,7 +75,6 @@ in
         src = pkgs.fetchFromGitHub {
           owner = "raspberrypi";
           repo = "linux";
-          # 6.12.21 
           rev = "stable_20250428";
           hash = "sha256-jVvJJJP4wSJm91jOz8QMXIujjGZ+IisTMCvusxarons="; 
         };
@@ -83,9 +82,6 @@ in
     };
   });
 
-  #         modDirVersion = "${version}-stable_20250428"; 
-
-  # rev = "3423cae6907838f760aada1a72bb6e378ebaa16d"; 
 
   # boot.kernelPatches = [
   #   {

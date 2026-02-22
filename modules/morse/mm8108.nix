@@ -7,7 +7,7 @@ morseFirmware = pkgs.stdenv.mkDerivation {
     src = pkgs.fetchFromGitHub {
       owner = "MorseMicro";
       repo = "morse-firmware";
-      rev = "master"; # Ideally find a specific tag/commit hash 
+      rev = "master"; 
       sha256 = "sha256-KgWL8Yx1V3Q5Ylz1SjaM/ZoD2OhToyBQaCCDDlwHYqw=";
     };
 
