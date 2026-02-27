@@ -10,7 +10,7 @@ let
         owner = "espressif";
         repo = "esp-hosted";
         rev = "master"; # Pin this to a specific commit hash later so we know it won't break
-        sha256 = "sha256-Ju4gcjcMKJZ/FFJrVYLQC+ERgePNyzFOHbtVA/bN0TU="; # Update this after first fail
+        sha256 = "hqUQpWCGsyre0Z/MNTMYTYMYT24kDnZ0bMKdkwlF4+w=";
       };
 
       # Point to the specific subdirectory for the driver
