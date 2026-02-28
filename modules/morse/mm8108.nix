@@ -22,6 +22,8 @@ morseFirmware = pkgs.stdenv.mkDerivation {
       cp ./bcf/morsemicro/bcf_mf15457.bin $out/lib/firmware/morse/
 
       ln -s $out/lib/firmware/morse/bcf_mf15457.bin $out/lib/firmware/morse/bcf_default.bin
+
+      ln -s $out/lib/firmware/morse/bcf_mf15457.bin $out/lib/firmware/morse/bcf_boardtype_0807.bin
     '';
   };
   in {
