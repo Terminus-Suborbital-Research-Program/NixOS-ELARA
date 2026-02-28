@@ -10,28 +10,32 @@ let
         owner = "espressif";
         repo = "esp-hosted";
         rev = "master"; # Pin this to a specific commit hash later so we know it won't break
-        sha256 = "hqUQpWCGsyre0Z/MNTMYTYMYT24kDnZ0bMKdkwlF4+w=";
+        sha256 = "sha256-hqUQpWCGsyre0Z/MNTMYTYMYT24kDnZ0bMKdkwlF4+w="; 
       };
 
-      # Point to the specific subdirectory for the driver
       sourceRoot = "source/esp_hosted_ng/host";
 
-      # CRITICAL: Inject the Kernel Headers and Build Tools
       nativeBuildInputs = kernel.moduleBuildDependencies ++ [ bc ];
 
-      # Fix the Makefile to use NixOS kernel paths instead of /lib/modules/$(uname -r)
+      postPatch = ''
+        # Remove clean calls because we are in snadbox
+        
+        sed -i 's/all: clean/all:/g' Makefile
+        
+        sed -i '/-C.*clean/d' Makefile
+      '';
+
       makeFlags = [
         "target=spi"
-        "KERNEL=${kernel.dev}"
+        "KERNEL=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
         "KDIR=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
         "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
       ];
 
-      # Install the .ko file to the correct NixOS module path
       installPhase = ''
-        mkdir -p $out/lib/modules/${kernel.modDirVersion}/kernel/drivers/net/wireless
-        cp esp32_spi.ko $out/lib/modules/${kernel.modDirVersion}/kernel/drivers/net/wireless/
-        # Check if esp_hosted_ng.ko exists and copy it too if the name changed in your version
+        # Using the 'extra' directory is the NixOS standard for out-of-tree modules
+        mkdir -p $out/lib/modules/${kernel.modDirVersion}/extra
+        cp esp32_spi.ko $out/lib/modules/${kernel.modDirVersion}/extra/
       '';
     }) {};
 in
@@ -76,7 +80,60 @@ in
   # the kernel has the same access, though I'm pretty sure libgpiod requests
   # hardware access from the kernel so this is likely fine
 
-  hardware.raspberry-pi.config.all.base-dt-params = {
-    spi = { enable = true; value = "on"; };
+  hardware.raspberry-pi.config.all.dt-overlays = {
+    esp32-spi-link = {
+      enable = true;
+      dtsText = ''
+        /dts-v1/;
+        /plugin/;
+
+        / {
+          compatible = "brcm,bcm2712";
+
+          fragment@0 {
+            target = <&spi0>;
+            __overlay__ {
+              status = "okay";
+              #address-cells = <1>;
+              #size-cells = <0>;
+              
+              /* Assign the SPI pin mux (GPIOs 9, 10, 11) */
+              pinctrl-names = "default";
+              pinctrl-0 = <&spi0_pins>;
+
+              esp32_spi: esp32_spi@0 {
+                compatible = "espressif,esp32_spi";
+                reg = <0>; 
+                spi-max-frequency = <20000000>; /* 20MHz  */
+                
+                /* GPIO 6, Active Low (flag 1) */
+                reset-gpios = <&gpio 6 1>;
+                
+                /* Handshake and Dataready usually Active Low*/
+                handshake-gpios = <&gpio 15 0>;
+                dataready-gpios = <&gpio 13 0>;
+                
+                status = "okay";
+              };
+            };
+          };
+
+          fragment@1 {
+            target = <&spidev0>;
+            __overlay__ {
+              status = "disabled";
+            };
+          };
+        };
+      '';
+    };
   };
+  
+  hardware.raspberry-pi.config.all.base-dt-params = {
+    spi = {
+      enable = true;
+      value = "on";
+    };
+  };
+
 }
