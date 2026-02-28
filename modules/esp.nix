@@ -81,9 +81,8 @@ in
   # hardware access from the kernel so this is likely fine
 
   hardware.deviceTree.overlays = [ {
-    esp32-spi-link = {
-      enable = true;
-      dtsText = ''
+    name = "esp32-spi-link-overlay";
+    dtsText = ''
         /dts-v1/;
         /plugin/;
 
@@ -126,13 +125,16 @@ in
           };
         };
       '';
-    };
+    
   }];
   
   hardware.raspberry-pi.config.all.base-dt-params = {
     spi = {
       enable = true;
       value = "on";
+    };
+    esp32-spi-link = {
+      enable = true;
     };
   };
 
