@@ -51,9 +51,9 @@ let
       ];
 
       installPhase = ''
-         mkdir -p "$modules/lib/modules/${kernel.modDirVersion}/extra"
-       cp morse.ko "$modules/lib/modules/${kernel.modDirVersion}/extra/"
-       cp dot11ah/dot11ah.ko "$modules/lib/modules/${kernel.modDirVersion}/extra/"
+        mkdir -p "$modules/lib/modules/${kernel.modDirVersion}/extra"
+        cp morse.ko "$modules/lib/modules/${kernel.modDirVersion}/extra/"
+        cp dot11ah/dot11ah.ko "$modules/lib/modules/${kernel.modDirVersion}/extra/"
 
         # Main output
        mkdir -p "$out"
