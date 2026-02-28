@@ -82,6 +82,7 @@ in
 
   hardware.deviceTree.overlays = [ {
     name = "esp32-spi-link-overlay";
+    filter = "*bcm2712-rpi-5-b.dtb";
     dtsText = ''
         /dts-v1/;
         /plugin/;
