@@ -80,7 +80,7 @@ in
   # the kernel has the same access, though I'm pretty sure libgpiod requests
   # hardware access from the kernel so this is likely fine
 
-  hardware.raspberry-pi.config.all.dt-overlays = {
+  hardware.deviceTree.overlays = [ {
     esp32-spi-link = {
       enable = true;
       dtsText = ''
@@ -127,7 +127,7 @@ in
         };
       '';
     };
-  };
+  }];
   
   hardware.raspberry-pi.config.all.base-dt-params = {
     spi = {
