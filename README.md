@@ -17,6 +17,18 @@ nix build .#nixosConfigurations.odin.config.system.build.toplevel
 nix build .#nixosConfigurations.odin.config.system.build.toplevel --dry-run
 ```
 
+
+**Build a new sd card image (stored in results folder):**
+```shell
+nix build .#installerImages.odin
+```
+
+**Flash an sd card with the image**
+```shell
+zstdcat result/sd-image/nixos-image-*.img.zst | sudo dd of=/dev/sda bs=4M status=progress conv=fsync
+```
+
+
 ### Managing Nix Generations
 
 Every time you run `nixos-rebuild switch`, NixOS creates a new system generation. If you fill up the Pi's storage or need to see which version is active, use these commands.
