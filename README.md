@@ -4,13 +4,18 @@ This is the operating system configuration `nixos` flake for our ejectable inter
 # Nix Commands
 
 **Rebuild the system with new changes to the nix flake:**
+```shell
 nixos-rebuild switch --flake .#odin
-
+```
 **Build new system without replacing the currently running one (useful for validating if you can compile all packages):**
+```shell
 nix build .#nixosConfigurations.odin.config.system.build.toplevel
+```
 
 **Test to see what packages will be build and what will be pulled from the cache:**
+```shell
 nix build .#nixosConfigurations.odin.config.system.build.toplevel --dry-run
+```
 
 ### Managing Nix Generations
 
