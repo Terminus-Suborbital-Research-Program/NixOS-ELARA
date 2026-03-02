@@ -1,4 +1,4 @@
-# JUPITER Operating System Configuation
+# ELARA Operating System Configurations
 This is the operating system configuration `nixos` flake for our ejectable interferometer ODIN and our spacecraft bus JUPITER. It will boot up a chosen system into a headless environment - the only offline item will be the ZeroTier VPN, that must be provisioned by Ethan Pascuales in order to run.
 
 # Nix Commands
