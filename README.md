@@ -138,7 +138,7 @@ lsmod
 
 Find specific module
 ```shell
-lsmod esp32_spi
+lsmod | grep esp32_spi
 ```
 
 Load a module into the kernel:
