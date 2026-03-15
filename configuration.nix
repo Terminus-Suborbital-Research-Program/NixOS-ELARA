@@ -25,6 +25,8 @@
     ./modules/morse/morse-tools.nix
     ./modules/radiacode.nix
     ./modules/programs.nix
+    ./modules/rust.nix
+    ./modules/tevs.nix
     ./modules/user.nix
     ./modules/wireless.nix
   ];
@@ -39,6 +41,7 @@
 
   # General Config
   nixpkgs.config.allowUnfree = true;
+  hardware.tevs.enable = true;
 
   hardware.enableRedistributableFirmware = true;
 

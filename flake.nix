@@ -11,7 +11,18 @@
   };
 
   outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
-            , nixos-anywhere, ... } @inputs: {
+            , nixos-anywhere, ... } @inputs:
+    let
+      gjsOverlay = final: prev: {
+        gjs = prev.gjs.overrideAttrs (oldAttrs: {
+          # This tells the Meson build system to STFU about GTK
+          mesonFlags = (oldAttrs.mesonFlags or []) ++ [ "-Dskip_gtk_tests=true" ];
+          doCheck = false;
+          doInstallCheck = false;
+          checkPhase = "true";
+        });
+      };
+    in {
 
     # packages.x86_64-linux.odin-image = self.nixosConfigurations.odin.config.system.build.sdImage;
 
@@ -32,17 +43,7 @@
 
         ({ config, pkgs, lib, ... }:
         {
-          nixpkgs.overlays = [
-            (self: super: {
-              gjs = super.gjs.overrideAttrs (oldAttrs: {
-                # This tells the Meson build system to STFU about GTK
-                mesonFlags = (oldAttrs.mesonFlags or []) ++ [ "-Dskip_gtk_tests=true" ];
-                doCheck = false;
-                doInstallCheck = false;
-                checkPhase = "true";
-              });
-            })
-          ];
+          nixpkgs.overlays = [ gjsOverlay ];
         })
       ];
     };
@@ -53,9 +54,6 @@
         # nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
         nixos-raspberrypi.nixosModules.raspberry-pi-5.base
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
-        ({ pkgs, ... }: {
-          nixpkgs.overlays = [ (import rust-overlay) ];
-        })
         ./configuration.nix
 
         # Disable specific unit tests from gjs triggered by the display-vc4
@@ -63,17 +61,7 @@
         # stuff in, but either way it breaks every build including vc4 when not disabled
         ({ config, pkgs, lib, ... }:
         {
-          nixpkgs.overlays = [
-            (self: super: {
-              gjs = super.gjs.overrideAttrs (oldAttrs: {
-                # This tells the Meson build system to STFU about GTK
-                mesonFlags = (oldAttrs.mesonFlags or []) ++ [ "-Dskip_gtk_tests=true" ];
-                doCheck = false;
-                doInstallCheck = false;
-                checkPhase = "true";
-              });
-            })
-          ];
+          nixpkgs.overlays = [ gjsOverlay ];
         })
       ];
     }).config.system.build.sdImage;
