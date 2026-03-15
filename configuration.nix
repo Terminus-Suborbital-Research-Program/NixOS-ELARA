@@ -18,7 +18,7 @@
 
   imports = [
     ./hardware/hardware-pi-5.nix
-    # ./hardware/kernel.nix
+    ./hardware/kernel.nix
     ./hardware/pi5-configtxt.nix
     ./modules/morse/mm8108.nix
     ./modules/morse/morse-driver.nix
