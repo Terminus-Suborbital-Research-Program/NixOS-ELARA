@@ -2,6 +2,7 @@
 
 let
   cfg = config.hardware.tevs;
+  kernelSrc = config.boot.kernelPackages.kernel.src;
 
   defaultTnDriver = pkgs.fetchFromGitHub {
     owner = "TechNexion-Vision";
@@ -65,10 +66,6 @@ EOF
           fi
         '';
 
-        extraStructuredConfig = (old.extraStructuredConfig or {}) // (with lib.kernel; {
-          VIDEO_TEVS = module;
-        });
-
         env = (old.env or {}) // {
           KCONFIG_MODE = "alldefconfig";
         };
@@ -82,7 +79,7 @@ EOF
         pname = "tevs-dtbo";
         version = "unstable";
         src = tnDriver;
-        nativeBuildInputs = [ pkgs.dtc ];
+        nativeBuildInputs = [ pkgs.dtc pkgs.gcc ];
         dontBuild = true;
 
         installPhase = ''
@@ -92,7 +89,18 @@ EOF
 
           while IFS= read -r dts; do
             name="$(basename "$dts" .dts)"
-            dtc -I dts -O dtb -o "$out/overlays/$name.dtbo" "$dts"
+            output_name="''${name%-overlay}"
+            preprocessed="$(mktemp)"
+
+            cpp -nostdinc -undef -P -x assembler-with-cpp \
+              -I "${kernelSrc}/include" \
+              -I "${kernelSrc}/arch/arm64/boot/dts" \
+              -I "${kernelSrc}/arch/arm64/boot/dts/overlays" \
+              -I "$src/arch/arm64/boot/dts" \
+              -I "$src/arch/arm64/boot/dts/overlays" \
+              "$dts" "$preprocessed"
+
+            dtc -@ -I dts -O dtb -o "$out/overlays/$output_name.dtbo" "$preprocessed"
           done < <(find "$src" -type f -name 'tevs-*.dts')
 
           runHook postInstall
@@ -147,6 +155,16 @@ in
 
   config = lib.mkIf cfg.enable {
     nixpkgs.overlays = [ tevsKernelOverlay ];
+
+    boot.kernelPatches = [
+      {
+        name = "tevs-kconfig";
+        patch = null;
+        structuredExtraConfig = with lib.kernel; {
+          VIDEO_TEVS = module;
+        };
+      }
+    ];
 
     boot.loader.raspberryPi.firmwarePackage = firmwareWithTevs;
 

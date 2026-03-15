@@ -22,11 +22,6 @@
       gcc 
       pkg-config
 
-      # Rust
-      (rust-bin.stable.latest.default.override { 
-        extensions = [ "rust-src" "rust-analyzer" ]; 
-      })
-
       # Hardware access
       libgpiod
       i2c-tools
