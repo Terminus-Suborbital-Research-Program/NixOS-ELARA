@@ -6,14 +6,14 @@
   boot.kernelPackages = pkgs.linuxPackages_rpi5.extend (_self: super: {
     kernel = super.kernel.override {
       argsOverride = rec {
-        version = "6.12.34";
-        modDirVersion = "6.12.34";
+        version = "6.12.25";
+        modDirVersion = "6.12.25";
 
         src = pkgs.fetchFromGitHub {
           owner = "raspberrypi";
           repo = "linux";
-          rev = "stable_20250702";
-          hash = "sha256-lK0esjFhLvtBbyddMfa1H7ZcBbcOm2ygor338ZT5VpI=";
+          rev = "stable_20250428";
+          hash = "sha256-jVvJJJP4wSJm91jOz8QMXIujjGZ+IisTMCvusxarons=";
         };
       };
     };
