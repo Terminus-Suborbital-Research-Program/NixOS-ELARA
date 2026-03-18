@@ -32,6 +32,8 @@
     ./modules/wireless.nix
   ];
 
+  # hardware.tevs.enable = true;s
+
  
   system.stateVersion = "25.11";# Pinned, DON"T CHANGE
 
@@ -42,7 +44,6 @@
 
   # General Config
   nixpkgs.config.allowUnfree = true;
-  hardware.tevs.enable = true;
 
   hardware.enableRedistributableFirmware = true;
 

@@ -1,7 +1,7 @@
 { lib, pkgs, ... }:
 
 {
-  boot.loader.raspberryPi.firmwarePackage = lib.mkDefault pkgs.raspberrypifw;
+  # boot.loader.raspberryPi.firmwarePackage = lib.mkDefault pkgs.raspberrypifw;
 
   boot.kernelPackages = pkgs.linuxPackages_rpi5.extend (_self: super: {
     kernel = super.kernel.override {
@@ -19,7 +19,7 @@
     };
   });
 
-  hardware.firmware = [ pkgs.raspberrypiWirelessFirmware ];
+  # hardware.firmware = [ pkgs.raspberrypiWirelessFirmware ];
 
   # Note this should be disabled eventually if brcmfmac is suspected to cause a problem
   boot.kernelParams = [ 
