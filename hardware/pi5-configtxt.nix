@@ -38,6 +38,18 @@
           value = "3";
         };
 
+        i2c_arm = {
+          enable = true;
+          value = "on";
+        };
+
+        i2c = {
+          enable = true;
+          value = "on";
+        };
+        
+      };
+
       };
 
     };
