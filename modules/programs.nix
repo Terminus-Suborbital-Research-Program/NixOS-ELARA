@@ -25,6 +25,13 @@
       # Hardware access
       libgpiod
       i2c-tools
+      v4l-utils
+      libcamera
+      gst_all_1.gstreamer
+      gst_all_1.gst-plugins-base
+      gst_all_1.gst-plugins-good
+      gst_all_1.gst-plugins-bad
+      gst_all_1.gst-libav
 
       # Sensing
       soapysdr 

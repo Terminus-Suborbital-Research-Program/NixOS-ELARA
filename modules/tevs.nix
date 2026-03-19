@@ -114,18 +114,16 @@ EOF
       pkgs.runCommand "rpi-firmware-with-tevs" {
         nativeBuildInputs = [ pkgs.coreutils ];
       } ''
-        mkdir -p "$out/overlays" "$out/lib/firmware"
+        mkdir -p "$out"
 
-        if [ -d "${cfg.firmwarePackage}/overlays" ]; then
-          cp -r "${cfg.firmwarePackage}/overlays"/* "$out/overlays" || true
-        fi
+        # Preserve the full firmware package layout expected by the Raspberry Pi
+        # image builder, especially share/raspberrypi/boot.
+        cp -a "${cfg.firmwarePackage}/." "$out/"
 
-        if [ -d "${cfg.firmwarePackage}/lib/firmware" ]; then
-          cp -r "${cfg.firmwarePackage}/lib/firmware"/* "$out/lib/firmware" || true
-        fi
+        mkdir -p "$out/share/raspberrypi/boot/overlays"
 
         if [ -d "${tevsDtbo}/overlays" ]; then
-          cp -r "${tevsDtbo}/overlays"/* "$out/overlays" || true
+          cp -r "${tevsDtbo}/overlays"/* "$out/share/raspberrypi/boot/overlays/" || true
         fi
       ''
     else
