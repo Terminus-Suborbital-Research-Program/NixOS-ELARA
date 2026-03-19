@@ -1,6 +1,6 @@
 { config, lib, pkgs, nixos-raspberrypi, ... }: {
    # Filesystem
-    boot.loader.raspberryPi.bootloader = "kernel";
+    #boot.loader.raspberryPi.bootloader = "kernel";
     # boot.supportedFilesystems = lib.mkForce [ "vfat" "ext4" ];
     # boot.zfs.enabled = false;
     # fileSystems = {
