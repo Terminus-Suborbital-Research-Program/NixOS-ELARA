@@ -22,24 +22,19 @@ let
 
       nativeBuildInputs = kernel.moduleBuildDependencies;
 
-      preBuild = ''
-        # Robustly patch Makefile for OOT build
-        sed -i 's/obj-\$(CONFIG_VIDEO_TEVS)/obj-m/g' Makefile
-        sed -i 's/obj-y/obj-m/g' Makefile
-      '';
-
       buildPhase = ''
         make -C ${kernel.dev}/lib/modules/${kernel.modDirVersion}/build \
           M=$(pwd) \
+          CONFIG_VIDEO_TEVS=m \
           modules
       '';
-
       installPhase = ''
         mkdir -p $out/lib/modules/${kernel.modDirVersion}/extra
-        find . -name "*.ko" -exec cp {} $out/lib/modules/${kernel.modDirVersion}/extra/ \;
+        cp tevs.ko $out/lib/modules/${kernel.modDirVersion}/extra/
       '';
     }
   ) {};
+
 
   #  Device tree overlays
   tevsDtbo = pkgs.stdenv.mkDerivation {
