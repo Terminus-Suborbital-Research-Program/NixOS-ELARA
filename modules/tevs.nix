@@ -2,6 +2,7 @@
 
 let
   kernel = config.boot.kernelPackages.kernel;
+  kernelSrc = kernel.src;
 
   tnSource = pkgs.fetchFromGitHub {
     owner = "TechNexion-Vision";
@@ -57,8 +58,11 @@ let
       for dts_file in arch/arm64/boot/dts/overlays/tevs-*.dts; do
         filename=$(basename "$dts_file" .dts)
         
-        # Preprocess (handle the includes)
+        # Preprocess (pulling headers from the actual kernel source)
         cpp -nostdinc -undef -P -x assembler-with-cpp \
+          -I "${kernelSrc}/include" \
+          -I "${kernelSrc}/arch/arm64/boot/dts" \
+          -I "${kernelSrc}/arch/arm64/boot/dts/overlays" \
           -I include \
           -I arch/arm64/boot/dts/overlays \
           "$dts_file" > "compiled_overlays/$filename.preprocessed.dts"
@@ -66,6 +70,7 @@ let
         # Compile
         dtc -@ -I dts -O dtb -o "compiled_overlays/$filename.dtbo" "compiled_overlays/$filename.preprocessed.dts"
       done
+
     '';
 
     installPhase = ''
