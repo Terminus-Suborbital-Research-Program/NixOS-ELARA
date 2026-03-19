@@ -24,11 +24,8 @@ let
 
       preBuild = ''
         # Robustly patch Makefile for OOT build
-        if grep -q "CONFIG_VIDEO_TEVS" Makefile; then
-          sed -i 's/obj-$(CONFIG_VIDEO_TEVS)/obj-m/g' Makefile
-        else
-          echo "obj-m += tevs.o" > Makefile
-        fi
+        sed -i 's/obj-\$(CONFIG_VIDEO_TEVS)/obj-m/g' Makefile
+        sed -i 's/obj-y/obj-m/g' Makefile
       '';
 
       buildPhase = ''
@@ -39,7 +36,7 @@ let
 
       installPhase = ''
         mkdir -p $out/lib/modules/${kernel.modDirVersion}/extra
-        cp *.ko $out/lib/modules/${kernel.modDirVersion}/extra/
+        find . -name "*.ko" -exec cp {} $out/lib/modules/${kernel.modDirVersion}/extra/ \;
       '';
     }
   ) {};
