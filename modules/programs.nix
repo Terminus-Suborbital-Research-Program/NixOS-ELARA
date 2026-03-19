@@ -1,4 +1,4 @@
-{ config, pkgs, lib, rust-overlay, ... }: 
+{ config, pkgs, lib, ... }: 
   let
     soapyextra = pkgs.soapysdr.override {
       extraPackages = [ 
@@ -8,8 +8,6 @@
     };
   in 
   {
-    nixpkgs.overlays = [ (import rust-overlay) ];
-
     environment.systemPackages = [
       soapyextra
     ] ++ (with pkgs; [
@@ -23,11 +21,6 @@
       pciutils
       gcc 
       pkg-config
-
-      # Rust
-      (rust-bin.stable.latest.default.override { 
-        extensions = [ "rust-src" "rust-analyzer" ]; 
-      })
 
       # Hardware access
       libgpiod
