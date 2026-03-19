@@ -6,6 +6,7 @@
       "https://cache.nixos.org"
       "https://nixos-raspberrypi.cachix.org"
       "https://terminus.cachix.org"
+      "https://atmopierce.cachix.org"
     ];
 
     trusted-public-keys = [
@@ -18,13 +19,15 @@
 
   imports = [
     ./hardware/hardware-pi-5.nix
-    # ./hardware/kernel.nix
+    ./hardware/kernel.nix
     ./hardware/pi5-configtxt.nix
-    ./modules/morse/mm8108.nix
-    ./modules/morse/morse-driver.nix
-    ./modules/morse/morse-tools.nix
+    # ./modules/morse/mm8108.nix
+    # ./modules/morse/morse-driver.nix
+    # ./modules/morse/morse-tools.nix
     ./modules/radiacode.nix
     ./modules/programs.nix
+    ./modules/rust.nix
+    ./modules/tevs.nix
     ./modules/user.nix
     ./modules/wireless.nix
   ];
@@ -39,6 +42,7 @@
 
   # General Config
   nixpkgs.config.allowUnfree = true;
+  hardware.tevs.enable = true;
 
   hardware.enableRedistributableFirmware = true;
 

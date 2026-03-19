@@ -1,4 +1,4 @@
-{ config, pkgs, lib, rust-overlay, ... }: 
+{ config, pkgs, lib, ... }: 
   let
     soapyextra = pkgs.soapysdr.override {
       extraPackages = [ 
@@ -8,8 +8,6 @@
     };
   in 
   {
-    nixpkgs.overlays = [ (import rust-overlay) ];
-
     environment.systemPackages = [
       soapyextra
     ] ++ (with pkgs; [
@@ -24,14 +22,16 @@
       gcc 
       pkg-config
 
-      # Rust
-      (rust-bin.stable.latest.default.override { 
-        extensions = [ "rust-src" "rust-analyzer" ]; 
-      })
-
       # Hardware access
       libgpiod
       i2c-tools
+      v4l-utils
+      libcamera
+      gst_all_1.gstreamer
+      gst_all_1.gst-plugins-base
+      gst_all_1.gst-plugins-good
+      gst_all_1.gst-plugins-bad
+      gst_all_1.gst-libav
 
       # Sensing
       soapysdr 
