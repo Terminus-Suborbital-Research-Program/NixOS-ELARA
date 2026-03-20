@@ -83,7 +83,9 @@ in
   hardware.raspberry-pi.config.all.dt-overlays = {
     "tevs-rpi22" = {
       enable = true;
-      params = {};
+      params = {
+        cam0 = "on";
+      };
     };
   };
 
