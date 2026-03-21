@@ -94,15 +94,6 @@
 			status = "okay";
 		};
 	};
-
-    fragment@5 {
-        target = <&cam0_reg>;
-        __overlay__ {
-            regulator-always-on;
-            regulator-boot-on;
-        };
-    };
-
    
 
 	__overrides__ {
@@ -111,8 +102,7 @@
 		media-controller = <&csi>,"brcm,media-controller?";
 		cam0 = <&i2c_frag>, "target:0=",<&i2c_csi_dsi0>,
 		       <&csi_frag>, "target:0=",<&csi0>,
-		       <&cam_node>, "VANA-supply:0=",<&cam0_reg>,
-               <&gpio_expander>, "vcc-supply:0=",<&cam0_reg>;
+		       <&cam_node>, "VANA-supply:0=",<&cam0_reg>;
         
         cam1 = <&i2c_frag>, "target:0=",<&i2c_csi_dsi1>,
                <&csi_frag>, "target:0=",<&csi1>;
