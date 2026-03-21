@@ -111,7 +111,7 @@
 		media-controller = <&csi>,"brcm,media-controller?";
 		cam0 = <&i2c_frag>, "target:0=",<&i2c_csi_dsi0>,
 		       <&csi_frag>, "target:0=",<&csi0>,
-		       <&cam_node>, "VANA-supply:0=",<&cam0_reg>;
+		       <&cam_node>, "VANA-supply:0=",<&cam0_reg>,
                <&gpio_expander>, "vcc-supply:0=",<&cam0_reg>;
         
         cam1 = <&i2c_frag>, "target:0=",<&i2c_csi_dsi1>,
