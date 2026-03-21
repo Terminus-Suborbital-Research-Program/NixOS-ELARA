@@ -18,7 +18,7 @@
 
 			gpio_expander: pca9554@27 {
 				compatible = "nxp,pca9554";
-				reg = <0x27>;
+				reg = <0x21>;
 				status = "okay";
 
                 vcc-supply = <&cam1_reg>;
