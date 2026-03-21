@@ -4,14 +4,14 @@ let
   kernel = config.boot.kernelPackages.kernel;
   kernelSrc = kernel.src;
 
-  # tnSource = pkgs.fetchFromGitHub {
-  #   owner = "TechNexion-Vision";
-  #   repo = "tn-rpi-camera-driver";
-  #   rev = "tn_rpi_kernel-6.12";
-  #   hash = "sha256-jBEy7JXL/ibqDQDfGDOCAMDSQAPgRDZhjal5zAC3zVE=";
-  # };
+  tnSource = pkgs.fetchFromGitHub {
+    owner = "TechNexion-Vision";
+    repo = "tn-rpi-camera-driver";
+    rev = "tn_rpi_kernel-6.12";
+    hash = "sha256-jBEy7JXL/ibqDQDfGDOCAMDSQAPgRDZhjal5zAC3zVE=";
+  };
 
-  tnSource = ./tevs.dts;
+  dtsSource = ./;
 
   # OOT Kernel mod
   tevsModule = config.boot.kernelPackages.callPackage ({ stdenv, kernel }:
@@ -42,14 +42,14 @@ let
   tevsDtbo = pkgs.stdenv.mkDerivation {
     pname = "tevs-dtbo";
     version = "6.12-tn";
-    src = tnSource;
+    src = dtsSource;
     
     nativeBuildInputs = [ pkgs.dtc ];
 
     buildPhase = ''
       mkdir -p compiled_overlays
       
-      for dts_file in arch/arm64/boot/dts/overlays/tevs-*.dts; do
+      for dts_file in ./*.dts; do
         filename=$(basename "$dts_file" .dts)
         
         # Preprocess (pulling headers from the actual kernel source)
