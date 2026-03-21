@@ -86,7 +86,6 @@ in
     "tevs-rpi22" = {
       enable = true;
       params = {
-        cam0 = "on";
       };
     };
   };
