@@ -11,7 +11,7 @@ let
     hash = "sha256-jBEy7JXL/ibqDQDfGDOCAMDSQAPgRDZhjal5zAC3zVE=";
   };
 
-  dtsSource = ./;
+  dtsSource = ./.;
 
   # OOT Kernel mod
   tevsModule = config.boot.kernelPackages.callPackage ({ stdenv, kernel }:
