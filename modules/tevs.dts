@@ -21,6 +21,8 @@
 				reg = <0x27>;
 				status = "okay";
 
+                vcc-supply = <&cam1_reg>;
+
 				gpio-controller;
 				#gpio-cells = <2>;
 				gpio-line-names = "EXPOSURE_TRIG_IN1",
@@ -101,6 +103,8 @@
         };
     };
 
+   
+
 	__overrides__ {
 		rotation = <&cam_node>,"rotation:0";
 		orientation = <&cam_node>,"orientation:0";
@@ -108,6 +112,7 @@
 		cam0 = <&i2c_frag>, "target:0=",<&i2c_csi_dsi0>,
 		       <&csi_frag>, "target:0=",<&csi0>,
 		       <&cam_node>, "VANA-supply:0=",<&cam0_reg>;
+               <&gpio_expander>, "vcc-supply:0=",<&cam0_reg>;
         
         cam1 = <&i2c_frag>, "target:0=",<&i2c_csi_dsi1>,
                <&csi_frag>, "target:0=",<&csi1>;
