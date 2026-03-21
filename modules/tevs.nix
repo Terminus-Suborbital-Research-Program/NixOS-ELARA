@@ -4,12 +4,14 @@ let
   kernel = config.boot.kernelPackages.kernel;
   kernelSrc = kernel.src;
 
-  tnSource = pkgs.fetchFromGitHub {
-    owner = "TechNexion-Vision";
-    repo = "tn-rpi-camera-driver";
-    rev = "tn_rpi_kernel-6.12";
-    hash = "sha256-jBEy7JXL/ibqDQDfGDOCAMDSQAPgRDZhjal5zAC3zVE=";
-  };
+  # tnSource = pkgs.fetchFromGitHub {
+  #   owner = "TechNexion-Vision";
+  #   repo = "tn-rpi-camera-driver";
+  #   rev = "tn_rpi_kernel-6.12";
+  #   hash = "sha256-jBEy7JXL/ibqDQDfGDOCAMDSQAPgRDZhjal5zAC3zVE=";
+  # };
+
+  tnSource = ./tevs.dts;
 
   # OOT Kernel mod
   tevsModule = config.boot.kernelPackages.callPackage ({ stdenv, kernel }:
