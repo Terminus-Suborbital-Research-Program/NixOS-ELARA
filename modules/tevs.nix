@@ -99,4 +99,29 @@ in
     mkdir -p /boot/firmware/overlays
     cp ${tevsDtbo}/overlays/*.dtbo /boot/firmware/overlays/
   '';
+
+  systemd.services.tevs-media-setup = {
+    description = "Configure TEVS Camera Media Controller Pipeline";
+    wantedBy = [ "multi-user.target" ];
+    
+    requires = [ "dev-media0.device" ];
+    after = [ "dev-media0.device" ];
+    
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    
+    path = [ pkgs.v4l-utils ]; 
+    
+    script = ''
+      # Link the CSI2 source pad to the RP1 CFE (Camera Frontend) sink pad
+      media-ctl -d /dev/media0 -l "'csi2':4 -> 'rp1-cfe-csi2_ch0':0 [1]" 
+      
+      # Configure pipeline formats
+      media-ctl -d /dev/media0 -V "'tevs 10-0048':0 [fmt:UYVY8_1X16/1280x720 field:none]" 
+      media-ctl -d /dev/media0 -V "'csi2':0 [fmt:UYVY8_1X16/1280x720 field:none]" 
+      media-ctl -d /dev/media0 -V "'csi2':4 [fmt:UYVY8_1X16/1280x720 field:none]"
+    '';
+  };
 }
