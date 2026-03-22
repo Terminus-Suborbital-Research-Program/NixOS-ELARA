@@ -11,6 +11,8 @@ let
     hash = "sha256-jBEy7JXL/ibqDQDfGDOCAMDSQAPgRDZhjal5zAC3zVE=";
   };
 
+  dtsSource = ./.;
+
   # OOT Kernel mod
   tevsModule = config.boot.kernelPackages.callPackage ({ stdenv, kernel }:
     stdenv.mkDerivation {
@@ -40,14 +42,14 @@ let
   tevsDtbo = pkgs.stdenv.mkDerivation {
     pname = "tevs-dtbo";
     version = "6.12-tn";
-    src = tnSource;
+    src = dtsSource;
     
     nativeBuildInputs = [ pkgs.dtc ];
 
     buildPhase = ''
       mkdir -p compiled_overlays
       
-      for dts_file in arch/arm64/boot/dts/overlays/tevs-*.dts; do
+      for dts_file in ./*.dts; do
         filename=$(basename "$dts_file" .dts)
         
         # Preprocess (pulling headers from the actual kernel source)
@@ -81,9 +83,15 @@ in
   '';
 
   hardware.raspberry-pi.config.all.dt-overlays = {
-    "tevs-rpi22" = {
+    "tevs,cam0" = {
       enable = true;
-      params = {};
+      params = {
+      };
+    };
+    "tevs,cam1" = {
+      enable = true;
+      params = {
+      };
     };
   };
 
@@ -91,4 +99,45 @@ in
     mkdir -p /boot/firmware/overlays
     cp ${tevsDtbo}/overlays/*.dtbo /boot/firmware/overlays/
   '';
+
+  systemd.services.tevs-media-setup = {
+    description = "Configure TEVS Camera Media Controller Pipeline";
+    wantedBy = [ "multi-user.target" ];
+    
+
+    
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    
+    path = [ pkgs.v4l-utils ]; 
+    
+    script = ''
+      echo "Waiting for /dev/media0 to initialize..."
+      
+      # Wait up to 15 seconds
+      timeout=15
+      while [ ! -e /dev/media0 ]; do
+        sleep 1
+        timeout=$((timeout - 1))
+        if [ "$timeout" -eq 0 ]; then
+          echo "Timeout waiting for /dev/media0"
+          exit 1
+        fi
+      done
+      
+      sleep 3
+      
+      echo "/dev/media0 found. Configuring pipeline..."
+
+      # Link the CSI2 source pad to the RP1 CFE (Camera Frontend) sink pad
+      media-ctl -d /dev/media0 -l "'csi2':4 -> 'rp1-cfe-csi2_ch0':0 [1]" 
+      
+      # Configure pipeline formats
+      media-ctl -d /dev/media0 -V "'tevs 10-0048':0 [fmt:UYVY8_1X16/1280x720 field:none]" 
+      media-ctl -d /dev/media0 -V "'csi2':0 [fmt:UYVY8_1X16/1280x720 field:none]" 
+      media-ctl -d /dev/media0 -V "'csi2':4 [fmt:UYVY8_1X16/1280x720 field:none]"
+    '';
+  };
 }

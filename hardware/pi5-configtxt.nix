@@ -20,6 +20,12 @@
           enable = true;
           value = true;
         };
+
+        camera_auto_detect = {
+          enable = true;
+          value = 0;
+        };
+        
       };
 
       # Base DTB parameters
