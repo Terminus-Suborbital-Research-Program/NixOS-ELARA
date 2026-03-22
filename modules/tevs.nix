@@ -127,6 +127,8 @@ in
         fi
       done
       
+      sleep 3
+      
       echo "/dev/media0 found. Configuring pipeline..."
 
       # Link the CSI2 source pad to the RP1 CFE (Camera Frontend) sink pad
