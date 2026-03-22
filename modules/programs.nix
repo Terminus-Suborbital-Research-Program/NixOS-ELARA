@@ -25,6 +25,7 @@
       # Hardware access
       libgpiod
       i2c-tools
+      v4l-utils
 
       # Sensing
       soapysdr 
