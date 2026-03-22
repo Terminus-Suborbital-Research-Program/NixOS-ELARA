@@ -104,8 +104,7 @@ in
     description = "Configure TEVS Camera Media Controller Pipeline";
     wantedBy = [ "multi-user.target" ];
     
-    requires = [ "dev-media0.device" ];
-    after = [ "dev-media0.device" ];
+
     
     serviceConfig = {
       Type = "oneshot";
@@ -115,6 +114,21 @@ in
     path = [ pkgs.v4l-utils ]; 
     
     script = ''
+      echo "Waiting for /dev/media0 to initialize..."
+      
+      # Wait up to 15 seconds
+      timeout=15
+      while [ ! -e /dev/media0 ]; do
+        sleep 1
+        timeout=$((timeout - 1))
+        if [ "$timeout" -eq 0 ]; then
+          echo "Timeout waiting for /dev/media0"
+          exit 1
+        fi
+      done
+      
+      echo "/dev/media0 found. Configuring pipeline..."
+
       # Link the CSI2 source pad to the RP1 CFE (Camera Frontend) sink pad
       media-ctl -d /dev/media0 -l "'csi2':4 -> 'rp1-cfe-csi2_ch0':0 [1]" 
       
