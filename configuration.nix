@@ -21,15 +21,15 @@
     ./hardware/hardware-pi-5.nix
     ./hardware/kernel.nix
     ./hardware/pi5-configtxt.nix
-    ./modules/morse/mm8108.nix
-    ./modules/morse/morse-driver.nix
-    ./modules/morse/morse-tools.nix
-    ./modules/radiacode.nix
-    ./modules/programs.nix
-    ./modules/rust.nix
-    ./modules/tevs.nix
-    ./modules/user.nix
-    ./modules/wireless.nix
+    ./modules/libs/morse/mm8108.nix
+    ./modules/libs/morse/morse-driver.nix
+    ./modules/libs/morse/morse-tools.nix
+    ./modules/libs/radiacode.nix
+    ./modules/libs/programs.nix
+    ./modules/libs/rust.nix
+    ./modules/libs/tevs.nix
+    ./modules/config/user.nix
+    ./modules/config/wireless.nix
   ];
 
   # hardware.tevs.enable = true;s
