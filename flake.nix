@@ -34,12 +34,6 @@
       };
     in {
 
-    # packages.x86_64-linux.odin-image = self.nixosConfigurations.odin.config.system.build.sdImage;
-
-    # installerImages = nixos-raspberrypi.installerImages.rpi5;
-
-    # packages.x86_64-linux.odin-image = 
-    # self.nixosConfigurations.odin.config.system.build.diskoImages;
 
     nixosConfigurations.odin = nixos-raspberrypi.lib.nixosSystemFull {
       specialArgs = inputs;
@@ -67,9 +61,6 @@
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
         ./configuration.nix
 
-        # Disable specific unit tests from gjs triggered by the display-vc4
-        # For some reason the last two always file, maybe because of the sandbox nix builds
-        # stuff in, but either way it breaks every build including vc4 when not disabled
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
