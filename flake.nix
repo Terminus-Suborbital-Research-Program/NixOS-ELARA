@@ -8,10 +8,11 @@
     jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
     guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
+    styx.url = "github:Terminus-Suborbital-Research-Program/Styx";
   };
 
   outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
-            , nixos-anywhere, ... } @inputs:
+            , nixos-anywhere, styx, ... } @inputs:
     let
       gjsOverlay = final: prev: {
         gjs = prev.gjs.overrideAttrs (oldAttrs: {
@@ -21,6 +22,15 @@
           doInstallCheck = false;
           checkPhase = "true";
         });
+      };
+
+      pkgs = import nixpkgs { inherit system; };
+
+      basler-pkg = pkgs.callPackage ./libs/basler.nix { };
+
+      odin-pkg = pkgs.callPackage "${styx}/machines/pi-5/odin-compute/odin.nix" {
+        src = styx;
+        basler-pylon = basler-pkg;
       };
     in {
 
@@ -44,6 +54,7 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
+          environment.systemPackages = [ odin-pkg ];
         })
       ];
     };
@@ -62,6 +73,7 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
+          environment.systemPackages = [ odin-pkg ];
         })
       ];
     }).config.system.build.sdImage;
