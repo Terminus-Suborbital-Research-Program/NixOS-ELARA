@@ -28,7 +28,7 @@
 
       basler-pkg = pkgs.callPackage ./libs/basler.nix { };
 
-      odin-pkg = pkgs.callPackage "${styx}/machines/pi-5/odin-compute/odin.nix" {
+      jupiter-pkg = pkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
         src = styx;
         basler-pylon = basler-pkg;
       };
