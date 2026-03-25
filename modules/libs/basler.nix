@@ -43,6 +43,6 @@ stdenv.mkDerivation {
       runHook postInstall
     '';
 
-};
+}
 
   
