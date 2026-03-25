@@ -47,7 +47,7 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
-          environment.systemPackages = [ odin-pkg ];
+          environment.systemPackages = [ jupiter-pkg ];
         })
       ];
     };
@@ -63,7 +63,7 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
-          environment.systemPackages = [ odin-pkg ];
+          environment.systemPackages = [ jupiter-pkg ];
         })
       ];
     }).config.system.build.sdImage;
