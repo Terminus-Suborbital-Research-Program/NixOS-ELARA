@@ -29,14 +29,17 @@ stdenv.mkDerivation {
       libusb1
       zlib
     ];
-    
+
+    sourceRoot = ".";
+    # tar -C $out/opt/pylon -xzf ./pylon-*.tar.gz
     # appendRunpaths = [ "${placeholder "out"}/opt/pylon/lib" ];
 
     installPhase = ''
       runHook preInstall
 
       mkdir -p $out/opt/pylon
-      tar -C $out/opt/pylon -xzf ./pylon-*.tar.gz
+      
+      tar -C $out/opt/pylon --strip-components=1 -xzf ./pylon-*.tar.gz
 
       ln -s $out/opt/pylon/include $out/include
 
