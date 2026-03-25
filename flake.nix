@@ -24,11 +24,10 @@
         });
       };
 
-      pkgs = import nixpkgs { inherit system; };
 
-      basler-pkg = pkgs.callPackage ./libs/basler.nix { };
+      basler-pkg = nixpkgs.callPackage ./libs/basler.nix { };
 
-      jupiter-pkg = pkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
+      jupiter-pkg = nixpkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
         src = styx;
         basler-pylon = basler-pkg;
       };
