@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }: 
+{ stdenv, requireFile, autoPatchelfHook, libusb1, zlib}: 
 pkgs.stdenv.mkDerivation {
   pname = "basler-pylon";
   version = "26.03.1";
