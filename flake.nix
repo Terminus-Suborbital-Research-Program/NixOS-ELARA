@@ -29,10 +29,10 @@
 
       basler-pkg = pkgs.callPackage ./modules/libs/basler.nix { };
 
-      jupiter-pkg = pkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
-        src = styx;
-        basler-pylon = basler-pkg;
-      };
+      # jupiter-pkg = pkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
+      #   src = styx;
+      #   basler-pylon = basler-pkg;
+      # };
     in {
 
 
@@ -49,7 +49,7 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
-          environment.systemPackages = [ jupiter-pkg ];
+          # environment.systemPackages = [ jupiter-pkg ];
         })
       ];
     };
@@ -65,9 +65,31 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
-          environment.systemPackages = [ jupiter-pkg ];
+          # environment.systemPackages = [ jupiter-pkg ];
         })
       ];
     }).config.system.build.sdImage;
+
+    devShells.${system}.default = pkgs.mkShell {
+        name = "odin-proto-shell";
+
+        buildInputs = [
+          basler-pkg   
+          pkgs.pkg-config    
+          pkgs.libusb1
+          pkgs.zlib
+        ];
+
+        shellHook = ''
+          export PYLON_ROOT="${basler-pkg}/opt/pylon"
+          
+          export GENICAM_GENTL64_PATH="${basler-pkg}/opt/pylon/lib/gentlproducer/gtl"
+          export PYLON_GENTL64_PATH="${basler-pkg}/opt/pylon/lib/gentlproducer/gtl"
+
+
+          export LD_LIBRARY_PATH="${basler-pkg}/opt/pylon/lib:${pkgs.lib.makeLibraryPath [ pkgs.libusb1 pkgs.zlib pkgs.stdenv.cc.cc.lib ]}:$LD_LIBRARY_PATH"
+
+        '';
+      };
   };
 }
