@@ -1,5 +1,5 @@
 { config, pkgs, lib, ... }: 
-stdenv.mkDerivation {
+pkgs.stdenv.mkDerivation {
   pname = "basler-pylon";
   version = "26.03.1";
 
