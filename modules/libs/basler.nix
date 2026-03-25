@@ -41,6 +41,20 @@ stdenv.mkDerivation {
       
       tar -C $out/opt/pylon --strip-components=1 -xzf ./pylon-*.tar.gz
 
+      rm -f $out/opt/pylon/bin/pylonviewer
+      rm -f $out/opt/pylon/bin/pylonviewer-start-with-logging
+      rm -f $out/opt/pylon/bin/ipconfigurator
+      rm -f $out/opt/pylon/bin/PylonGigEConfigurator
+      rm -f $out/opt/pylon/bin/PylonAIAgent
+      rm -f $out/opt/pylon/bin/qt.conf
+
+      rm -rf $out/opt/pylon/lib/Qt
+      rm -rf $out/opt/pylon/lib/pylonviewer
+      rm -rf $out/opt/pylon/lib/pylondataprocessingplugins
+      rm -rf $out/opt/pylon/lib/dataprocessingpluginsb
+
+      rm -f $out/opt/pylon/lib/libPylonDataProcessingGui*
+      
       ln -s $out/opt/pylon/include $out/include
 
       runHook postInstall
