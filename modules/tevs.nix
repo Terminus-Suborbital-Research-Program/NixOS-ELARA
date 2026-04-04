@@ -188,5 +188,6 @@ in
       
       v4l2-ctl -d /dev/tevs-aux --set-fmt-video=width=1280,height=720,pixelformat=UYVY --stream-mmap --stream-count=1 --stream-to=- | \
       ffmpeg -y -f rawvideo -pixel_format uyvy422 -video_size 1280x720 -i - -pix_fmt gray "$filename"
+    }
   '';
 }
