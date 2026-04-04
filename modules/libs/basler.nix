@@ -31,8 +31,6 @@ stdenv.mkDerivation {
     ];
 
     sourceRoot = ".";
-    # tar -C $out/opt/pylon -xzf ./pylon-*.tar.gz
-    # appendRunpaths = [ "${placeholder "out"}/opt/pylon/lib" ];
 
     installPhase = ''
       runHook preInstall
