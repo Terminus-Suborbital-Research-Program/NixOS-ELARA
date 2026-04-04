@@ -108,7 +108,6 @@ in
   systemd.services."tevs-media-setup@" = {
     description = "Configure TEVS Camera Pipeline on %I";
     
-    
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -116,14 +115,15 @@ in
     
     path = [ pkgs.v4l-utils pkgs.gnugrep pkgs.coreutils ];
     
+    scriptArgs = "%I";
+    
     script = ''
-      mdev="/dev/%I"
+      mdev="/dev/$1"
       echo "Udev triggered configuration for $mdev"
 
-      # Ensure it's fully populated before polling
       media-ctl -d "$mdev" -p > /dev/null 2>&1
 
-      tevs_entity=$(media-ctl -d "$mdev" -p 2>/dev/null | grep -o 'entity [0-9]*: tevs [^ ]*' | cut -d' ' -f3-)
+      tevs_entity=$(media-ctl -d "$mdev" -p 2>/dev/null | grep -o 'entity [0-9]*: tevs [^ ]*' | cut -d' ' -f3- || true)
 
       if [ -n "$tevs_entity" ]; then
         echo "Found TEVS sensor '$tevs_entity' on $mdev. Applying routing..."
@@ -135,7 +135,7 @@ in
         
         echo "Pipeline $mdev ready for V4L2 grab."
       else
-        echo "No TEVS sensor attached to $mdev."
+        echo "No TEVS sensor attached to $mdev. Exiting cleanly."
       fi
     '';
   };
