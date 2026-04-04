@@ -100,44 +100,43 @@ in
     cp ${tevsDtbo}/overlays/*.dtbo /boot/firmware/overlays/
   '';
 
-  systemd.services.tevs-media-setup = {
-    description = "Configure TEVS Camera Media Controller Pipeline";
-    wantedBy = [ "multi-user.target" ];
-    
+  services.udev.extraRules = ''
+    # When an rp1-cfe media device appears start the script
+    SUBSYSTEM=="media", KERNEL=="media*", ATTRS{model}=="rp1-cfe", TAG+="systemd", ENV{SYSTEMD_WANTS}+="tevs-media-setup@%k.service"
+  '';
 
+  systemd.services."tevs-media-setup@" = {
+    description = "Configure TEVS Camera Pipeline on %I";
+    
     
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     
-    path = [ pkgs.v4l-utils ]; 
+    path = [ pkgs.v4l-utils pkgs.gnugrep pkgs.coreutils ];
     
     script = ''
-      echo "Waiting for /dev/media0 to initialize..."
-      
-      # Wait up to 15 seconds
-      timeout=15
-      while [ ! -e /dev/media0 ]; do
-        sleep 1
-        timeout=$((timeout - 1))
-        if [ "$timeout" -eq 0 ]; then
-          echo "Timeout waiting for /dev/media0"
-          exit 1
-        fi
-      done
-      
-      sleep 3
-      
-      echo "/dev/media0 found. Configuring pipeline..."
+      mdev="/dev/%I"
+      echo "Udev triggered configuration for $mdev"
 
-      # Link the CSI2 source pad to the RP1 CFE (Camera Frontend) sink pad
-      media-ctl -d /dev/media0 -l "'csi2':4 -> 'rp1-cfe-csi2_ch0':0 [1]" 
-      
-      # Configure pipeline formats
-      media-ctl -d /dev/media0 -V "'tevs 10-0048':0 [fmt:UYVY8_1X16/1280x720 field:none]" 
-      media-ctl -d /dev/media0 -V "'csi2':0 [fmt:UYVY8_1X16/1280x720 field:none]" 
-      media-ctl -d /dev/media0 -V "'csi2':4 [fmt:UYVY8_1X16/1280x720 field:none]"
+      # Ensure it's fully populated before polling
+      media-ctl -d "$mdev" -p > /dev/null 2>&1
+
+      tevs_entity=$(media-ctl -d "$mdev" -p 2>/dev/null | grep -o 'entity [0-9]*: tevs [^ ]*' | cut -d' ' -f3-)
+
+      if [ -n "$tevs_entity" ]; then
+        echo "Found TEVS sensor '$tevs_entity' on $mdev. Applying routing..."
+        
+        media-ctl -d "$mdev" -l "'csi2':4 -> 'rp1-cfe-csi2_ch0':0 [1]"
+        media-ctl -d "$mdev" -V "'$tevs_entity':0 [fmt:UYVY8_1X16/1280x720 field:none]"
+        media-ctl -d "$mdev" -V "'csi2':0 [fmt:UYVY8_1X16/1280x720 field:none]"
+        media-ctl -d "$mdev" -V "'csi2':4 [fmt:UYVY8_1X16/1280x720 field:none]"
+        
+        echo "Pipeline $mdev ready for V4L2 grab."
+      else
+        echo "No TEVS sensor attached to $mdev."
+      fi
     '';
   };
 }
