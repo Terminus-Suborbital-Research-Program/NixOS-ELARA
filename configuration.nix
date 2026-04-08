@@ -41,7 +41,12 @@
   services.udev.extraRules = ''
     # /etc/udev/rules.d/99-radiacode.rules
     SUBSYSTEM=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="f123", MODE="0660", GROUP="dialout", SYMLINK+="radia_code"
+
+    # Basler USB3 Vision Cameras
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="2676", MODE="0666"
   '';
+
+  environment.systemPackages = [ basler-pylon ];
 
   # General Config
   nixpkgs.config.allowUnfree = true;

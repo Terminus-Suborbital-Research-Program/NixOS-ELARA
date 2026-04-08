@@ -49,7 +49,7 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
-          # environment.systemPackages = [ jupiter-pkg ];
+            environment.systemPackages = [ basler-pkg jupiter-pkg ];
         })
       ];
     };
