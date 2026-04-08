@@ -10,7 +10,7 @@ let
         owner = "espressif";
         repo = "esp-hosted";
         rev = "master"; # Pin this to a specific commit hash later so we know it won't break
-        sha256 = "sha256-hqUQpWCGsyre0Z/MNTMYTYMYT24kDnZ0bMKdkwlF4+w="; 
+        sha256 = "sha256-3tMBG57PhZMjLRehg/B28iYPYnvuU6iYfnS2KxAtTBo="; 
       };
 
       sourceRoot = "source/esp_hosted_ng/host";
@@ -23,6 +23,10 @@ let
         sed -i 's/all: clean/all:/g' Makefile
         
         sed -i '/-C.*clean/d' Makefile
+       # sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 15/' spi/esp_spi.h
+       # sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 13/' spi/esp_spi.h
+        sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 584/' spi/esp_spi.h
+        sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 582/' spi/esp_spi.h
       '';
 
       makeFlags = [
@@ -38,6 +42,91 @@ let
         cp esp32_spi.ko $out/lib/modules/${kernel.modDirVersion}/extra/
       '';
     }) {};
+
+  #  espDtbo = pkgs.stdenv.mkDerivation {
+  #   pname = "esp32-spi-link-dtbo";
+  #   version = "1.0";
+    
+  #   nativeBuildInputs = [ pkgs.dtc ];
+  #   dontUnpack = true;
+  #   # This securely passes the multiline string as a file to the build environment
+  #   passAsFile = [ "dtsText" ];
+  #   dtsText = ''
+  #       /dts-v1/;
+  #       /plugin/;
+
+  #       / {
+  #         compatible = "brcm,bcm2712";
+
+  #         fragment@0 {
+  #           target = <&spi0>;
+  #           __overlay__ {
+  #             status = "okay";
+  #             #address-cells = <1>;
+  #             #size-cells = <0>;
+              
+  #             /* Assign the SPI pin mux (GPIOs 9, 10, 11) */
+  #             pinctrl-names = "default";
+  #             pinctrl-0 = <&spi0_pins>;
+
+  #             esp32_spi: esp32_spi@0 {
+  #               compatible = "espressif,esp32_spi";
+  #               reg = <0>; 
+  #               spi-max-frequency = <20000000>; /* 20MHz  */
+                
+  #               /* GPIO 6, Active Low (flag 1) */
+  #               reset-gpios = <&gpio 6 1>;
+                
+  #               /* Handshake and Dataready usually Active Low*/
+  #               handshake-gpios = <&gpio 15 0>;
+  #               dataready-gpios = <&gpio 13 0>;
+                
+  #               status = "okay";
+  #             };
+  #           };
+  #         };
+
+  #         fragment@1 {
+  #           target = <&spidev0>;
+  #           __overlay__ {
+  #             status = "disabled";
+  #           };
+  #         };
+  #       };
+  #   '';
+
+  #   buildPhase = ''
+  #     dtc -@ -I dts -O dtb -o esp32-spi-link.dtbo $dtsTextPath
+  #   '';
+
+  #   installPhase = ''
+  #     mkdir -p $out/overlays
+  #     cp esp32-spi-link.dtbo $out/overlays/
+  #   '';
+  # };
+
+  spiDisablerDtbo = pkgs.stdenv.mkDerivation {
+    pname = "spi-disabler-dtbo";
+    version = "1.0";
+    dontUnpack = true; 
+    nativeBuildInputs = [ pkgs.dtc ];
+    passAsFile = [ "dtsText" ];
+    dtsText = ''
+        /dts-v1/;
+        /plugin/;
+        / {
+          compatible = "brcm,bcm2712";
+          fragment@0 {
+            target = <&spidev0>;
+            __overlay__ {
+              status = "disabled";
+            };
+          };
+        };
+    '';
+    buildPhase = "dtc -@ -I dts -O dtb -o spi_disabler.dtbo $dtsTextPath";
+    installPhase = "mkdir -p $out/overlays; cp spi_disabler.dtbo $out/overlays/";
+  };
 in
 {
   # Load module on boot
@@ -62,11 +151,12 @@ in
   # Note may have to tweak "esp32_spi.spi_clk_freq=10"
   # But leaving that out because it seems system dependent
   # And this may just work fine by default on the pi 5
-  boot.kernelParams = [
-    "esp32_spi.resetpin=6" 
-    "esp32_spi.spi_handshake=15"
-    "esp32_spi.spi_dataready=13"
-  ];
+  # boot.kernelParams = [
+  #   "esp32_spi.resetpin=6" 
+  #   "esp32_spi.spi_handshake=15"
+  #   "esp32_spi.spi_dataready=13"
+  # ];
+  boot.kernelParams = [ "esp32_spi.resetpin=575" ];
 
   #
 
@@ -80,62 +170,35 @@ in
   # the kernel has the same access, though I'm pretty sure libgpiod requests
   # hardware access from the kernel so this is likely fine
 
-  hardware.deviceTree.overlays = [ {
-    name = "esp32-spi-link-overlay";
-    filter = "*bcm2712-rpi-5-b.dtb";
-    dtsText = ''
-        /dts-v1/;
-        /plugin/;
+  # system.activationScripts.esp-overlays = ''
+  #   mkdir -p /boot/firmware/overlays
+  #   cp ${espDtbo}/overlays/*.dtbo /boot/firmware/overlays/
+  # '';
 
-        / {
-          compatible = "brcm,bcm2712";
-
-          fragment@0 {
-            target = <&spi0>;
-            __overlay__ {
-              status = "okay";
-              #address-cells = <1>;
-              #size-cells = <0>;
-              
-              /* Assign the SPI pin mux (GPIOs 9, 10, 11) */
-              pinctrl-names = "default";
-              pinctrl-0 = <&spi0_pins>;
-
-              esp32_spi: esp32_spi@0 {
-                compatible = "espressif,esp32_spi";
-                reg = <0>; 
-                spi-max-frequency = <20000000>; /* 20MHz  */
-                
-                /* GPIO 6, Active Low (flag 1) */
-                reset-gpios = <&gpio 6 1>;
-                
-                /* Handshake and Dataready usually Active Low*/
-                handshake-gpios = <&gpio 15 0>;
-                dataready-gpios = <&gpio 13 0>;
-                
-                status = "okay";
-              };
-            };
-          };
-
-          fragment@1 {
-            target = <&spidev0>;
-            __overlay__ {
-              status = "disabled";
-            };
-          };
-        };
-      '';
-    
-  }];
-  
+  #   hardware.raspberry-pi.config.all.dt-overlays = {
+  #    "esp32-spi-link" = {
+  #      enable = true;
+  #      params = {};
+  #    };
+  #  };
+  hardware.raspberry-pi.config.all.dt-overlays = {
+    "spi_disabler" = { enable = true; params = {}; };
+  };
   hardware.raspberry-pi.config.all.base-dt-params = {
     spi = {
       enable = true;
       value = "on";
     };
-    esp32-spi-link = {
-      enable = true;
+  };
+
+  systemd.services.load-esp-driver = {
+    description = "Load ESP32 SPI Driver";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" "systemd-udev-settle.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
     };
   };
 
