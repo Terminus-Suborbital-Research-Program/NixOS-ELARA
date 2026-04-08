@@ -20,6 +20,12 @@
           enable = true;
           value = true;
         };
+
+        camera_auto_detect = {
+          enable = true;
+          value = 0;
+        };
+        
       };
 
       # Base DTB parameters
@@ -38,8 +44,20 @@
           value = "3";
         };
 
+        i2c_arm = {
+          enable = true;
+          value = "on";
+        };
+
+        i2c = {
+          enable = true;
+          value = "on";
+        };
+        
+      };
+
       };
 
     };
-  };
 }
+
