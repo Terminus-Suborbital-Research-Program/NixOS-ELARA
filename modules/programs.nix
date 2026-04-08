@@ -27,6 +27,12 @@
       i2c-tools
       v4l-utils
 
+      # raspberrypi-utils 
+      # bluez
+      # bluez-tools
+      util-linux
+      bc
+
       # Sensing
       soapysdr 
       soapyairspy 
