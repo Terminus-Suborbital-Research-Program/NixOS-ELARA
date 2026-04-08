@@ -29,10 +29,10 @@
 
       basler-pkg = pkgs.callPackage ./modules/libs/basler.nix { };
 
-      # jupiter-pkg = pkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
-      #   src = styx;
-      #   basler-pylon = basler-pkg;
-      # };
+      jupiter-pkg = pkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
+        src = styx;
+        basler-pylon = basler-pkg;
+      };
     in {
 
 
