@@ -46,7 +46,6 @@
     SUBSYSTEM=="usb", ATTRS{idVendor}=="2676", MODE="0666"
   '';
 
-  environment.systemPackages = [ basler-pylon ];
 
   # General Config
   nixpkgs.config.allowUnfree = true;
