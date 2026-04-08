@@ -170,10 +170,10 @@ in
   # the kernel has the same access, though I'm pretty sure libgpiod requests
   # hardware access from the kernel so this is likely fine
 
-  # system.activationScripts.esp-overlays = ''
-  #   mkdir -p /boot/firmware/overlays
-  #   cp ${espDtbo}/overlays/*.dtbo /boot/firmware/overlays/
-  # '';
+  system.activationScripts.esp-overlays = ''
+    mkdir -p /boot/firmware/overlays
+    cp ${spiDisablerDtbo}/overlays/*.dtbo /boot/firmware/overlays/
+  '';
 
   #   hardware.raspberry-pi.config.all.dt-overlays = {
   #    "esp32-spi-link" = {
