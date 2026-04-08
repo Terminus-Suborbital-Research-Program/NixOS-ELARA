@@ -25,8 +25,9 @@
     ./modules/libs/morse/morse-driver.nix
     ./modules/libs/morse/morse-tools.nix
     ./modules/libs/radiacode.nix
+    ./modules/libs/esp.nix
     ./modules/libs/programs.nix
-    ./modules/libs/rust.nix
+    #./modules/libs/rust.nix
     ./modules/libs/tevs.nix
     ./modules/config/user.nix
     ./modules/config/wireless.nix
