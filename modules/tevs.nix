@@ -100,44 +100,94 @@ in
     cp ${tevsDtbo}/overlays/*.dtbo /boot/firmware/overlays/
   '';
 
-  systemd.services.tevs-media-setup = {
-    description = "Configure TEVS Camera Media Controller Pipeline";
-    wantedBy = [ "multi-user.target" ];
-    
+  services.udev.extraRules = ''
+    # When an rp1-cfe media device appears start the script
+    SUBSYSTEM=="media", KERNEL=="media*", ATTRS{model}=="rp1-cfe", TAG+="systemd", ENV{SYSTEMD_WANTS}+="tevs-media-setup@%k.service"
+  '';
 
+  systemd.services."tevs-media-setup@" = {
+    description = "Configure TEVS Camera Pipeline on %I";
     
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
     
-    path = [ pkgs.v4l-utils ]; 
+    path = [ pkgs.v4l-utils pkgs.gnugrep pkgs.coreutils pkgs.gawk];
+    
+    scriptArgs = "%I";
     
     script = ''
-      echo "Waiting for /dev/media0 to initialize..."
-      
-      # Wait up to 15 seconds
-      timeout=15
-      while [ ! -e /dev/media0 ]; do
-        sleep 1
-        timeout=$((timeout - 1))
-        if [ "$timeout" -eq 0 ]; then
-          echo "Timeout waiting for /dev/media0"
-          exit 1
-        fi
-      done
-      
-      sleep 3
-      
-      echo "/dev/media0 found. Configuring pipeline..."
+      mdev="/dev/$1"
+      echo "Udev triggered configuration for $mdev"
 
-      # Link the CSI2 source pad to the RP1 CFE (Camera Frontend) sink pad
-      media-ctl -d /dev/media0 -l "'csi2':4 -> 'rp1-cfe-csi2_ch0':0 [1]" 
-      
-      # Configure pipeline formats
-      media-ctl -d /dev/media0 -V "'tevs 10-0048':0 [fmt:UYVY8_1X16/1280x720 field:none]" 
-      media-ctl -d /dev/media0 -V "'csi2':0 [fmt:UYVY8_1X16/1280x720 field:none]" 
-      media-ctl -d /dev/media0 -V "'csi2':4 [fmt:UYVY8_1X16/1280x720 field:none]"
+      media-ctl -d "$mdev" -p > /dev/null 2>&1
+
+      tevs_entity=$(media-ctl -d "$mdev" -p 2>/dev/null | grep -o 'entity [0-9]*: tevs [^ ]*' | cut -d' ' -f3- || true)
+
+      if [ -n "$tevs_entity" ]; then
+        echo "Found TEVS sensor '$tevs_entity' on $mdev. Applying routing..."
+
+        vnode=$(media-ctl -d "$mdev" -p | grep -A 5 "entity.*rp1-cfe-csi2_ch0" | grep "device node name" | awk '{print $4}')
+
+        echo "TEVS sensor '$tevs_entity' on $mdev is mapped to $vnode"
+        
+        media-ctl -d "$mdev" -l "'csi2':4 -> 'rp1-cfe-csi2_ch0':0 [1]"
+        media-ctl -d "$mdev" -V "'$tevs_entity':0 [fmt:UYVY8_1X16/1280x720 field:none]"
+        media-ctl -d "$mdev" -V "'csi2':0 [fmt:UYVY8_1X16/1280x720 field:none]"
+        media-ctl -d "$mdev" -V "'csi2':4 [fmt:UYVY8_1X16/1280x720 field:none]"
+        
+        echo "Pipeline $mdev ready for V4L2 grab."
+
+        if [[ "$tevs_entity" == *"10-0048"* ]]; then
+          ln -sf "$vnode" /dev/tevs-main
+        else
+          ln -sf "$vnode" /dev/tevs-aux
+        fi
+      else
+        echo "No TEVS sensor attached to $mdev. Exiting cleanly."
+      fi
     '';
   };
+
+  environment.interactiveShellInit = ''
+    # csi0 cam
+    tevs0r() {
+      # If no argument is provided, default to test_main.yuv
+      local filename="''${1:-test_main.yuv}"
+      
+      echo "Grabbing frame from /dev/tevs-main to $filename..."
+      v4l2-ctl -d /dev/tevs-main --set-fmt-video=width=1280,height=720,pixelformat=UYVY --stream-mmap --stream-count=1 --stream-to="$filename"
+    }
+
+    # Function for the csi2 cam
+    tevs1r() {
+      # If no argument is provided, default to test_aux.yuv
+      local filename="''${1:-test_aux.yuv}"
+      
+      echo "Grabbing frame from /dev/tevs-aux to $filename..."
+      v4l2-ctl -d /dev/tevs-aux --set-fmt-video=width=1280,height=720,pixelformat=UYVY --stream-mmap --stream-count=1 --stream-to="$filename"
+    }
+
+    # output grayscale tiff
+    tevs0() {
+      local filename="''${1:-starfield_main.tiff}"
+      
+      echo "Grabbing Luma frame from /dev/tevs-main to $filename..."
+      
+      # Pipe v4l2-ctl stdout (-) to ffmpeg stdin (-)
+      v4l2-ctl -d /dev/tevs-main --set-fmt-video=width=1280,height=720,pixelformat=UYVY --stream-mmap --stream-count=1 --stream-to=- | \
+      ffmpeg -y -f rawvideo -pixel_format uyvy422 -video_size 1280x720 -i - -pix_fmt gray "$filename"
+    }
+
+    # Output Grayscale tiff for csi1 camera
+    tevs1() {
+      local filename="''${1:-starfield_aux.tiff}"
+      
+      echo "Grabbing Luma frame from /dev/tevs-aux to $filename..."
+      
+      v4l2-ctl -d /dev/tevs-aux --set-fmt-video=width=1280,height=720,pixelformat=UYVY --stream-mmap --stream-count=1 --stream-to=- | \
+      ffmpeg -y -f rawvideo -pixel_format uyvy422 -video_size 1280x720 -i - -pix_fmt gray "$filename"
+    }
+  '';
 }
