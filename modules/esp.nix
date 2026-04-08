@@ -43,68 +43,6 @@ let
       '';
     }) {};
 
-  #  espDtbo = pkgs.stdenv.mkDerivation {
-  #   pname = "esp32-spi-link-dtbo";
-  #   version = "1.0";
-    
-  #   nativeBuildInputs = [ pkgs.dtc ];
-  #   dontUnpack = true;
-  #   # This securely passes the multiline string as a file to the build environment
-  #   passAsFile = [ "dtsText" ];
-  #   dtsText = ''
-  #       /dts-v1/;
-  #       /plugin/;
-
-  #       / {
-  #         compatible = "brcm,bcm2712";
-
-  #         fragment@0 {
-  #           target = <&spi0>;
-  #           __overlay__ {
-  #             status = "okay";
-  #             #address-cells = <1>;
-  #             #size-cells = <0>;
-              
-  #             /* Assign the SPI pin mux (GPIOs 9, 10, 11) */
-  #             pinctrl-names = "default";
-  #             pinctrl-0 = <&spi0_pins>;
-
-  #             esp32_spi: esp32_spi@0 {
-  #               compatible = "espressif,esp32_spi";
-  #               reg = <0>; 
-  #               spi-max-frequency = <20000000>; /* 20MHz  */
-                
-  #               /* GPIO 6, Active Low (flag 1) */
-  #               reset-gpios = <&gpio 6 1>;
-                
-  #               /* Handshake and Dataready usually Active Low*/
-  #               handshake-gpios = <&gpio 15 0>;
-  #               dataready-gpios = <&gpio 13 0>;
-                
-  #               status = "okay";
-  #             };
-  #           };
-  #         };
-
-  #         fragment@1 {
-  #           target = <&spidev0>;
-  #           __overlay__ {
-  #             status = "disabled";
-  #           };
-  #         };
-  #       };
-  #   '';
-
-  #   buildPhase = ''
-  #     dtc -@ -I dts -O dtb -o esp32-spi-link.dtbo $dtsTextPath
-  #   '';
-
-  #   installPhase = ''
-  #     mkdir -p $out/overlays
-  #     cp esp32-spi-link.dtbo $out/overlays/
-  #   '';
-  # };
-
   spiDisablerDtbo = pkgs.stdenv.mkDerivation {
     pname = "spi-disabler-dtbo";
     version = "1.0";
@@ -134,13 +72,12 @@ in
 
   # Disable this becuase rpi_init.sh disables it so that it
   # does not hold the spi interface instead of the esp driver
-  boot.blacklistedKernelModules = [ "spidev" ];
+  #boot.blacklistedKernelModules = [ "spidev" ];
 
-  # boot.kernelModules = [ "cfg80211" "esp32_spi" ]; 
   # cfg80211 should be loading in with networking.wireless, but if it's not loading before
   # the driver then I should try explicit import
 
-  boot.kernelModules = [ "esp32_spi" ]; # check the .ko with 
+ # boot.kernelModules = [ "esp32_spi" ]; # check the .ko with 
   # ls -R /run/current-system/kernel-modules/lib/modules/$(uname -r)/
   # or 
   # find /run/current-system/kernel-modules/ -name "*.ko" | grep -E "esp|morse"
@@ -148,39 +85,19 @@ in
   # /run/booted-system/kernel-modules/lib/modules/$(uname -r)/kernel/drivers/net/wireless/esp32_spi.ko
   # check loading with lsmod | grep esp32
 
-  # Note may have to tweak "esp32_spi.spi_clk_freq=10"
-  # But leaving that out because it seems system dependent
-  # And this may just work fine by default on the pi 5
-  # boot.kernelParams = [
-  #   "esp32_spi.resetpin=6" 
-  #   "esp32_spi.spi_handshake=15"
-  #   "esp32_spi.spi_dataready=13"
-  # ];
-  boot.kernelParams = [ "esp32_spi.resetpin=575" ];
-
-  #
 
   # See if SPI is enabled with 
   # ls /dev/spidev*
   # ls /sys/class/spi_master/
   # If not enabled, uncomment this and rebuild
-  #
-  # Also check if kernel has direct acces to gpio through pinctrl-rp1
-  # I know user access works with gpiod but not sure if that means
-  # the kernel has the same access, though I'm pretty sure libgpiod requests
-  # hardware access from the kernel so this is likely fine
+
 
   system.activationScripts.esp-overlays = ''
     mkdir -p /boot/firmware/overlays
     cp ${spiDisablerDtbo}/overlays/*.dtbo /boot/firmware/overlays/
   '';
 
-  #   hardware.raspberry-pi.config.all.dt-overlays = {
-  #    "esp32-spi-link" = {
-  #      enable = true;
-  #      params = {};
-  #    };
-  #  };
+
   hardware.raspberry-pi.config.all.dt-overlays = {
     "spi_disabler" = { enable = true; params = {}; };
   };
@@ -203,3 +120,4 @@ in
   };
 
 }
+
