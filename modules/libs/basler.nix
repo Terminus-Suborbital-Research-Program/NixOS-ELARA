@@ -1,5 +1,6 @@
 { stdenv, requireFile, autoPatchelfHook, libusb1, zlib}: 
-stdenv.mkDerivation {
+let
+  basler-pylon = stdenv.mkDerivation {
   pname = "basler-pylon";
   version = "26.03.1";
 
@@ -58,6 +59,16 @@ stdenv.mkDerivation {
       runHook postInstall
     '';
 
-}
+}; 
 
+in 
+{
+  environment.systemPackages = [ basler-pylon ];
+
+  services.udev.extraRules = ''
+    # Basler USB3 Vision Cameras
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="2676", MODE="0666"
+  '';
+
+}
   

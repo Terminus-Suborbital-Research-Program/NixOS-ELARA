@@ -8,7 +8,7 @@
     jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
     guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
-    styx.url = "github:Terminus-Suborbital-Research-Program/Styx";
+    styx.url = "github:Terminus-Suborbital-Research-Program/Styx/Basler-Nix";
   };
 
   outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
