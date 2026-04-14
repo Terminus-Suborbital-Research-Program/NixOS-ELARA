@@ -19,7 +19,7 @@
 
   imports = [
     ./hardware-pi-4/hardware-jupiter.nix
-    ./hardware-pi-4/kernel.nix
+    ./hardware-pi-4/pi-4-kernel.nix
     ./modules/morse/mm8108.nix
     ./modules/morse/morse-driver.nix
     ./modules/morse/morse-tools.nix
