@@ -25,15 +25,14 @@
     ./modules/morse/morse-driver.nix
     ./modules/morse/morse-tools.nix
     ./modules/radiacode.nix
-    ./modules/esp.nix
+    ./modules/odin/odin-esp.nix
+    ./modules/odin/tevs.nix
     ./modules/programs.nix
     ./modules/rust.nix
-    ./modules/tevs.nix
     ./modules/user.nix
     ./modules/wireless.nix
   ];
 
-  # hardware.tevs.enable = true;s
 
  
   system.stateVersion = "25.11";# Pinned, DON"T CHANGE

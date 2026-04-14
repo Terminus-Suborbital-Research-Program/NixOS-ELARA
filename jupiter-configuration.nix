@@ -24,10 +24,9 @@
     ./modules/morse/morse-driver.nix
     ./modules/morse/morse-tools.nix
     ./modules/radiacode.nix
-    ./modules/esp.nix
+    ./modules/jupiter/jupiter-esp.nix
     ./modules/programs.nix
     ./modules/rust.nix
-    ./modules/tevs.nix
     ./modules/user.nix
     ./modules/wireless.nix
   ];
