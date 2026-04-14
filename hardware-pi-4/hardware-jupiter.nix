@@ -10,7 +10,7 @@
   boot.blacklistedKernelModules =
     [ "bluetooth" "btusb" "btbcm" "btrtl" "btintel" "hci_uart" ];
 
-  fileSystems."/" = {
+  fileSystems."/" = lib.mkDefault {
     device = "/dev/disk/by-label/NIXOS_SD"; # this is important!
     fsType = "ext4";
     options = [ "noatime" ];

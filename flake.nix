@@ -8,9 +8,10 @@
     jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
     guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
   };
 
-  outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
+  outputs = { self, nixpkgs,  nixos-hardware, nixos-raspberrypi, rust-overlay, guard
             , nixos-anywhere, ... } @inputs:
     let
       gjsOverlay = final: prev: {
@@ -31,6 +32,16 @@
     # packages.x86_64-linux.odin-image = 
     # self.nixosConfigurations.odin.config.system.build.diskoImages;
 
+    nixosConfigurations."dev-pi" = let system = "aarch64-linux";
+    in nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        nixos-hardware.nixosModules.raspberry-pi-4
+        ./jupiter-configuration.nix
+        "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+      ];
+    };
+    
     nixosConfigurations.odin = nixos-raspberrypi.lib.nixosSystemFull {
       specialArgs = inputs;
       modules = [

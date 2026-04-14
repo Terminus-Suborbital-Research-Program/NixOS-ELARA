@@ -18,9 +18,8 @@
 
 
   imports = [
-    ./hardware/hardware-pi-5.nix
-    ./hardware/kernel.nix
-    # ./hardware/pi5-configtxt.nix
+    ./hardware-pi-4/hardware-jupiter.nix
+    ./hardware-pi-4/kernel.nix
     ./modules/morse/mm8108.nix
     ./modules/morse/morse-driver.nix
     ./modules/morse/morse-tools.nix
@@ -43,12 +42,32 @@
     SUBSYSTEM=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="f123", MODE="0660", GROUP="dialout", SYMLINK+="radia_code"
   '';
 
+  hardware.deviceTree = {
+    enable = true;
+    overlays = [{
+      name = "uart1-overlay";
+      dtsText = builtins.readFile ./uart1-overlay.dts;
+    }];
+  };
+  hardware.i2c.enable = true;
+
+
+hardware.raspberry-pi."4" = {
+  i2c1.enable = true;
+  bluetooth.enable = false;
+};
+
+  # Group for GPIO access
+  users.groups.gpio = { };
+  users.groups.video = { };
+
+
   # General Config
   nixpkgs.config.allowUnfree = true;
 
   hardware.enableRedistributableFirmware = true;
 
-  networking.hostName = "odin";
+  networking.hostName = "jupiter";
   # networking.useNetworkd = true;
   # networking.wireless.iwd = { enable = true; settings.Settings.AutoConnect = true; };
   

@@ -17,7 +17,6 @@
 
   services.openssh.enable = true;
 
-  hardware.bluetooth.enable = true;
 
 
   hardware.enableRedistributableFirmware = true;

@@ -18,9 +18,9 @@
 
 
   imports = [
-    ./hardware/hardware-pi-5.nix
-    ./hardware/kernel.nix
-    ./hardware/pi5-configtxt.nix
+    ./hardware-pi-5/hardware-pi-5.nix
+    ./hardware-pi-5/kernel.nix
+    ./hardware-pi-5/pi5-configtxt.nix
     ./modules/morse/mm8108.nix
     ./modules/morse/morse-driver.nix
     ./modules/morse/morse-tools.nix
@@ -47,6 +47,7 @@
   nixpkgs.config.allowUnfree = true;
 
   hardware.enableRedistributableFirmware = true;
+  hardware.bluetooth.enable = true;
 
   networking.hostName = "odin";
   # networking.useNetworkd = true;
