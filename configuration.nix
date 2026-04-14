@@ -24,7 +24,7 @@
     ./modules/morse/mm8108.nix
     ./modules/morse/morse-driver.nix
     ./modules/morse/morse-tools.nix
-    ./modules/radiacode.nix
+    ./modules/jupiter/radiacode.nix
     ./modules/odin/odin-esp.nix
     ./modules/odin/tevs.nix
     ./modules/programs.nix

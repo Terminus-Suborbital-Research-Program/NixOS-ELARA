@@ -23,7 +23,7 @@
     ./modules/morse/mm8108.nix
     ./modules/morse/morse-driver.nix
     ./modules/morse/morse-tools.nix
-    ./modules/radiacode.nix
+    ./modules/jupiter/radiacode.nix
     ./modules/jupiter/jupiter-esp.nix
     ./modules/programs.nix
     ./modules/rust.nix
