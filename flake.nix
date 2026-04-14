@@ -35,6 +35,7 @@
     nixosConfigurations."dev-pi" = let system = "aarch64-linux";
     in nixpkgs.lib.nixosSystem {
       inherit system;
+      specialArgs = inputs;
       modules = [
         nixos-hardware.nixosModules.raspberry-pi-4
         ./jupiter-configuration.nix
@@ -44,6 +45,7 @@
     nixosConfigurations."dev-pi-image" = let system = "aarch64-linux";
     in nixpkgs.lib.nixosSystem {
       inherit system;
+      specialArgs = inputs;
       modules = [
         nixos-hardware.nixosModules.raspberry-pi-4
         ./jupiter-configuration.nix
