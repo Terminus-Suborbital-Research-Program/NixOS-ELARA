@@ -38,6 +38,15 @@
       modules = [
         nixos-hardware.nixosModules.raspberry-pi-4
         ./jupiter-configuration.nix
+      ];
+    };
+    
+    nixosConfigurations."dev-pi-image" = let system = "aarch64-linux";
+    in nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        nixos-hardware.nixosModules.raspberry-pi-4
+        ./jupiter-configuration.nix
         "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
       ];
     };
