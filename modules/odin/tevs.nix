@@ -121,17 +121,36 @@ in
       mdev="/dev/$1"
       echo "Udev triggered configuration for $mdev"
 
-      media-ctl -d "$mdev" -p > /dev/null 2>&1
+      MAX_RETRIES=20
+      RETRY_DELAY=0.5  # seconds
+      attempt=1
+      tevs_entity=""
 
-      tevs_entity=$(media-ctl -d "$mdev" -p 2>/dev/null | grep -o 'entity [0-9]*: tevs [^ ]*' | cut -d' ' -f3- || true)
+      # Poll until the TEVS sensor appears or timeout
+      while [ $attempt -le $MAX_RETRIES ]; do
+        # Suppress output, we just want to parse the entities
+        media-ctl -d "$mdev" -p > /dev/null 2>&1 || true
+        
+        tevs_entity=$(media-ctl -d "$mdev" -p 2>/dev/null | grep -o 'entity [0-9]*: tevs [^ ]*' | cut -d' ' -f3- || true)
+        
+        if [ -n "$tevs_entity" ]; then
+          echo "Found TEVS sensor '$tevs_entity' on attempt $attempt."
+          break
+        fi
+        
+        echo "Attempt $attempt: TEVS sensor not yet ready on $mdev. Waiting..."
+        sleep $RETRY_DELAY
+        ((attempt++))
+      done
 
       if [ -n "$tevs_entity" ]; then
-        echo "Found TEVS sensor '$tevs_entity' on $mdev. Applying routing..."
+        echo "Applying routing for '$tevs_entity' on $mdev..."
 
         vnode=$(media-ctl -d "$mdev" -p | grep -A 5 "entity.*rp1-cfe-csi2_ch0" | grep "device node name" | awk '{print $4}')
 
         echo "TEVS sensor '$tevs_entity' on $mdev is mapped to $vnode"
         
+        # Apply the pipeline configuration
         media-ctl -d "$mdev" -l "'csi2':4 -> 'rp1-cfe-csi2_ch0':0 [1]"
         media-ctl -d "$mdev" -V "'$tevs_entity':0 [fmt:UYVY8_1X16/1280x720 field:none]"
         media-ctl -d "$mdev" -V "'csi2':0 [fmt:UYVY8_1X16/1280x720 field:none]"
@@ -139,13 +158,16 @@ in
         
         echo "Pipeline $mdev ready for V4L2 grab."
 
+        # Create persistent symlinks based on the I2C address
         if [[ "$tevs_entity" == *"10-0048"* ]]; then
           ln -sf "$vnode" /dev/tevs-main
         else
           ln -sf "$vnode" /dev/tevs-aux
         fi
       else
-        echo "No TEVS sensor attached to $mdev. Exiting cleanly."
+        echo "ERROR: Timed out waiting for TEVS sensor on $mdev after $MAX_RETRIES attempts. Exiting."
+        # Exit with a non-zero code so systemctl status shows it failed clearly
+        exit 1 
       fi
     '';
   };
