@@ -2,10 +2,16 @@
 
 {
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
-
-  boot.initrd.availableKernelModules = [ "xhci_pci" ];
+boot.initrd.availableKernelModules = lib.mkForce [
+    "vc4"          # Broadcom display
+    "bcm2835_dma"  # DMA
+    "i2c_bcm2835"  # I2C
+    "xhci_pci"     # USB
+    "usbhid"       # Keyboard
+    "sdhci_iproc"  # SD Card
+  ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "sun4i-drm" ];
+  boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
   boot.blacklistedKernelModules =
     [ "bluetooth" "btusb" "btbcm" "btrtl" "btintel" "hci_uart" ];
@@ -29,3 +35,4 @@
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
   powerManagement.cpuFreqGovernor = lib.mkDefault "ondemand";
 }
+

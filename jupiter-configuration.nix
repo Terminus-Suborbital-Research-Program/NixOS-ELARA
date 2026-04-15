@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
     nix.settings = {
@@ -49,8 +49,6 @@
     }];
   };
   hardware.i2c.enable = true;
-
-
 hardware.raspberry-pi."4" = {
   i2c1.enable = true;
   bluetooth.enable = false;

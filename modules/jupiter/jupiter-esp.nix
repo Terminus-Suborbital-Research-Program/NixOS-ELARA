@@ -97,6 +97,7 @@ in
     overlays = [
       {
         name = "spi-disabler";
+        filter = "*-rpi-4-b.dtb";
         dtsText = ''
           /dts-v1/;
           /plugin/;
@@ -149,4 +150,5 @@ in
   };
 
 }
+
 
