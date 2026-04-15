@@ -21,16 +21,16 @@
     ./hardware-pi-5/hardware-pi-5.nix
     ./hardware-pi-5/kernel.nix
     ./hardware-pi-5/pi5-configtxt.nix
-    ./modules/morse/mm8108.nix
-    ./modules/morse/morse-driver.nix
-    ./modules/morse/morse-tools.nix
+    ./modules/libs/morse/mm8108.nix
+    ./modules/libs/morse/morse-driver.nix
+    ./modules/libs/morse/morse-tools.nix
     ./modules/jupiter/radiacode.nix
     ./modules/libs/esp.nix
     ./modules/odin/tevs.nix
-    ./modules/programs.nix
-    ./modules/rust.nix
-    ./modules/user.nix
-    ./modules/wireless.nix
+    ./modules/libs/programs.nix
+    ./modules/libs/rust.nix
+    ./modules/config/user.nix
+    ./modules/config/wireless.nix
   ];
 
 

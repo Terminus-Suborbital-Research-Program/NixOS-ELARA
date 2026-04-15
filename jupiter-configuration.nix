@@ -20,15 +20,15 @@
   imports = [
     ./hardware-pi-4/hardware-jupiter.nix
     ./hardware-pi-4/pi-4-kernel.nix
-    ./modules/morse/mm8108.nix
-    ./modules/morse/morse-driver.nix
-    ./modules/morse/morse-tools.nix
+    ./modules/libs/morse/mm8108.nix
+    ./modules/libs/morse/morse-driver.nix
+    ./modules/libs/morse/morse-tools.nix
     ./modules/jupiter/radiacode.nix
     ./modules/libs/esp.nix
-    ./modules/programs.nix
-    ./modules/rust.nix
-    ./modules/user.nix
-    ./modules/wireless.nix
+    ./modules/libs/programs.nix
+    ./modules/libs/rust.nix
+    ./modules/config/user.nix
+    ./modules/config/wireless.nix
   ];
 
   # hardware.tevs.enable = true;s

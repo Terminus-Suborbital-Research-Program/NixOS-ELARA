@@ -13,7 +13,7 @@
   };
 
   outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
-            , nixos-anywhere, styx, ... } @inputs:
+            , nixos-anywhere, styx, nixos-hardware, ... } @inputs:
     let
       gjsOverlay = final: prev: {
         gjs = prev.gjs.overrideAttrs (oldAttrs: {
