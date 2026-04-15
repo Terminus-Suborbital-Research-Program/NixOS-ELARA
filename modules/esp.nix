@@ -9,8 +9,8 @@ let
       src = fetchFromGitHub {
         owner = "espressif";
         repo = "esp-hosted";
-        rev = "master"; # Pin this to a specific commit hash later so we know it won't break
-        sha256 = "sha256-3tMBG57PhZMjLRehg/B28iYPYnvuU6iYfnS2KxAtTBo="; 
+        rev = "8626b42fd3f9eb5a1ccb5daea481f0d8d32b1685"; # Pin this to a specific commit hash later so we know it won't break
+        sha256 = "sha256-DCPj3t1V7clO43dTWwRmlEYbrQ/Gcqdh3EkERZHgHQo="; 
       };
 
       sourceRoot = "source/esp_hosted_ng/host";
