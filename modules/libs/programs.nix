@@ -22,10 +22,16 @@
       gcc 
       pkg-config
 
+      # Dependencies to let v4l work
+      clang
+      llvmPackages.libclang
+
       # Hardware access
       libgpiod
       i2c-tools
       v4l-utils
+      linuxHeaders
+      glibc.dev
 
       # raspberrypi-utils 
       # bluez
@@ -43,7 +49,10 @@
 
 
     services.udev.packages = [ pkgs.airspy pkgs.rtl-sdr ];
-    environment.variables.SOAPY_SDR_PLUGIN_PATH = "${soapyextra}/lib/SoapySDR/modules0.8";
+    environment.variables = {
+      SOAPY_SDR_PLUGIN_PATH = "${soapyextra}/lib/SoapySDR/modules0.8";
+      LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+      BINDGEN_EXTRA_CLANG_ARGS = "-I${pkgs.linuxHeaders}/include -I${pkgs.glibc.dev}/include";    };
   }
   
 

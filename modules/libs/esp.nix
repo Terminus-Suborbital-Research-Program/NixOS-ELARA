@@ -9,8 +9,8 @@ let
       src = fetchFromGitHub {
         owner = "espressif";
         repo = "esp-hosted";
-        rev = "master"; # Pin this to a specific commit hash later so we know it won't break
-        sha256 = "sha256-3tMBG57PhZMjLRehg/B28iYPYnvuU6iYfnS2KxAtTBo="; 
+        rev = "8626b42fd3f9eb5a1ccb5daea481f0d8d32b1685"; # Pin this to a specific commit hash later so we know it won't break
+        sha256 = "sha256-DCPj3t1V7clO43dTWwRmlEYbrQ/Gcqdh3EkERZHgHQo="; 
       };
 
       sourceRoot = "source/esp_hosted_ng/host";
@@ -66,9 +66,7 @@ let
     installPhase = "mkdir -p $out/overlays; cp spi_disabler.dtbo $out/overlays/";
   };
 in
-{
-  # Load module on boot
-  boot.extraModulePackages = [ espHostedModule ];
+lib.mkMerge [
 
   # Disable this becuase rpi_init.sh disables it so that it
   # does not hold the spi interface instead of the esp driver
@@ -91,33 +89,144 @@ in
   # ls /sys/class/spi_master/
   # If not enabled, uncomment this and rebuild
 
+  # Global config:
+  {
+    boot.extraModulePackages = [ espHostedModule ];
+    
+    networking.networkmanager.unmanaged = [ "wlan3" ];
 
-  system.activationScripts.esp-overlays = ''
-    mkdir -p /boot/firmware/overlays
-    cp ${spiDisablerDtbo}/overlays/*.dtbo /boot/firmware/overlays/
-  '';
+    systemd.services.load-esp-driver = {
+      description = "Load ESP32 SPI Driver";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" "systemd-udev-settle.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
+      };
+    };
+  }
 
-
-  hardware.raspberry-pi.config.all.dt-overlays = {
-    "spi_disabler" = { enable = true; params = {}; };
-  };
-  hardware.raspberry-pi.config.all.base-dt-params = {
-    spi = {
+  # Jupiter config (AP)
+  (lib.mkIf (config.networking.hostName == "jupiter") {
+    
+    # Standard NixOS Hardware Overlays
+    hardware.deviceTree = {
       enable = true;
-      value = "on";
+      overlays = [
+        {
+          name = "spi-disabler";
+          filter = "*-rpi-4-b.dtb";
+          dtsText = ''
+            /dts-v1/;
+            /plugin/;
+            / {
+              compatible = "brcm,bcm2711"; 
+              fragment@0 {
+                target = <&spidev0>;
+                __overlay__ {
+                  status = "disabled";
+                };
+              };
+            };
+          '';
+        }
+        {
+          filter = "*-rpi-4-b.dtb"; 
+          name = "spi0-0cs";
+          dtboFile = "${pkgs.device-tree_rpi.overlays}/spi0-0cs.dtbo";
+        }
+      ];
     };
-  };
 
-  systemd.services.load-esp-driver = {
-    description = "Load ESP32 SPI Driver";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" "systemd-udev-settle.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
+    # Access Point Configuration
+    environment.etc."esp32/wpa_ap.conf".text = ''
+      ctrl_interface=/var/run/wpa_supplicant_esp
+      ctrl_interface_group=wheel
+      update_config=1
+      country=US
+
+      network={
+          ssid="ELARA_ESP_LINK"
+          mode=2               # AP Mode
+          key_mgmt=WPA-PSK
+          psk="ElaraFlight"
+          frequency=2437       # Channel 6
+      }
+    '';
+
+    systemd.services.esp-ap = {
+      description = "ESP32 Access Point (wlan3)";
+      bindsTo = [ "sys-subsystem-net-devices-wlan3.device" ];
+      after = [ "sys-subsystem-net-devices-wlan3.device" "load-esp-driver.service" ];
+      wantedBy = [ "multi-user.target" ];
+      
+      serviceConfig = {
+        Type = "simple";
+        ExecStart = "${pkgs.wpa_supplicant}/bin/wpa_supplicant -Dnl80211 -iwlan3 -c/etc/esp32/wpa_ap.conf -s";
+        Restart = "always";
+        RestartSec = "5s";
+      };
     };
-  };
 
-}
+    networking.interfaces.wlan3.ipv4.addresses = [{
+      address = "192.168.4.1";
+      prefixLength = 24;
+    }];
+  })
+
+
+  (lib.mkIf (config.networking.hostName == "odin") {
+
+    # NVMD Style Overlays
+    system.activationScripts.esp-overlays = ''
+      mkdir -p /boot/firmware/overlays
+      cp ${spiDisablerDtbo}/overlays/*.dtbo /boot/firmware/overlays/
+    '';
+
+    hardware.raspberry-pi.config.all.dt-overlays = {
+      "spi_disabler" = { enable = true; params = {}; };
+    };
+    hardware.raspberry-pi.config.all.base-dt-params = {
+      spi = {
+        enable = true;
+        value = "on";
+      };
+    };
+
+    # Client Configuration
+    environment.etc."esp32/wpa_client.conf".text = ''
+      ctrl_interface=/var/run/wpa_supplicant_esp
+      ctrl_interface_group=wheel
+      update_config=1
+      country=US
+
+      network={
+          ssid="ELARA_ESP_LINK"
+          scan_ssid=1
+          key_mgmt=WPA-PSK
+          psk="ElaraFlight"
+      }
+    '';
+
+    systemd.services.esp-client = {
+      description = "ESP32 Client (wlan3)";
+      bindsTo = [ "sys-subsystem-net-devices-wlan3.device" ];
+      after = [ "sys-subsystem-net-devices-wlan3.device" "load-esp-driver.service" ];
+      wantedBy = [ "multi-user.target" ];
+      
+      serviceConfig = {
+        Type = "simple";
+        ExecStart = "${pkgs.wpa_supplicant}/bin/wpa_supplicant -Dnl80211 -iwlan3 -c/etc/esp32/wpa_client.conf -s";
+        Restart = "always";
+        RestartSec = "5s";
+      };
+    };
+
+    networking.interfaces.wlan3.ipv4.addresses = [{
+      address = "192.168.4.2";
+      prefixLength = 24;
+    }];
+  })
+]
 

@@ -1,5 +1,5 @@
 {
-  description = "ODIN Flight Software System";
+  description = "ELARA Flight Software Systems";
 
   inputs = {
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-25.11";
@@ -9,10 +9,15 @@
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
     guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
     styx.url = "github:Terminus-Suborbital-Research-Program/Styx/Basler-Nix";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
   };
 
   outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
             , nixos-anywhere, styx, ... } @inputs:
+  };
+
+  outputs = { self, nixpkgs,  nixos-hardware, nixos-raspberrypi, rust-overlay, guard
+            , nixos-anywhere, ... } @inputs:
     let
       gjsOverlay = final: prev: {
         gjs = prev.gjs.overrideAttrs (oldAttrs: {
@@ -35,7 +40,27 @@
       };
     in {
 
-
+    nixosConfigurations."dev-pi" = let system = "aarch64-linux";
+    in nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = inputs;
+      modules = [
+        nixos-hardware.nixosModules.raspberry-pi-4
+        ./jupiter-configuration.nix
+      ];
+    };
+    
+    nixosConfigurations."dev-pi-image" = let system = "aarch64-linux";
+    in nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = inputs;
+      modules = [
+        nixos-hardware.nixosModules.raspberry-pi-4
+        ./jupiter-configuration.nix
+        "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+      ];
+    };
+    
     nixosConfigurations.odin = nixos-raspberrypi.lib.nixosSystemFull {
       specialArgs = inputs;
       modules = [
@@ -43,7 +68,6 @@
         nixos-raspberrypi.nixosModules.raspberry-pi-5.base
         # nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
-        # nixos-raspberrypi.nixosModules.sd-image
         ./configuration.nix
 
         ({ config, pkgs, lib, ... }:

@@ -128,37 +128,143 @@ wpaConfContent = ''
 
   
 };
-in {
-  environment.systemPackages = [
-    morseCli 
-    wpaSupplicantS1G 
-    pkgs.iw 
-    pkgs.libnl 
-    pkgs.openssl
-  ];
+in 
+  # environment.systemPackages = [
+  #   morseCli 
+  #   wpaSupplicantS1G 
+  #   pkgs.iw 
+  #   pkgs.libnl 
+  #   pkgs.openssl
+  # ];
 
-  environment.etc."morse/wpa_supplicant.conf".text = wpaConfContent;
+  # environment.etc."morse/wpa_supplicant.conf".text = wpaConfContent;
 
-  systemd.services.morse-supplicant = {
-    bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
-    after = [ "sys-subsystem-net-devices-wlan1.device" ];
-    description = "Morse Micro HaLow Supplicant (S1G + P2P)";
-    # after = [ "network.target" ];
-    wantedBy = [ "multi-user.target" ];
+  # systemd.services.morse-supplicant = {
+  #   bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
+  #   after = [ "sys-subsystem-net-devices-wlan1.device" ];
+  #   description = "Morse Micro HaLow Supplicant (S1G + P2P)";
+  #   # after = [ "network.target" ];
+  #   wantedBy = [ "multi-user.target" ];
     
-    serviceConfig = {
-      Type = "simple";
-      User = "root"; 
-      RuntimeDirectory = "wpa_supplicant_s1g"; 
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     User = "root"; 
+  #     RuntimeDirectory = "wpa_supplicant_s1g"; 
       
-      # -D nl80211 : Use the modern Linux wireless driver
-      # -i wlan1   : The interface name (verify this on your device!)
-      # -c ...     : The config file path
-      # -s         : Output to syslog (journalctl)
-      ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan1 -c/etc/morse/wpa_supplicant.conf -s";
+  #     # -D nl80211 : Use the modern Linux wireless driver
+  #     # -i wlan1   : The interface name (verify this on your device!)
+  #     # -c ...     : The config file path
+  #     # -s         : Output to syslog (journalctl)
+  #     ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan1 -c/etc/morse/wpa_supplicant.conf -s";
       
-      Restart = "always";
-      RestartSec = "5s";
+  #     Restart = "always";
+  #     RestartSec = "5s";
+  #   };
+  # };
+
+  lib.mkMerge [
+  
+  # --- GLOBAL CONFIGURATION (Applies to both Jupiter and Odin) ---
+  {
+    environment.systemPackages = [
+      morseCli 
+      wpaSupplicantS1G 
+      pkgs.iw 
+      pkgs.libnl 
+      pkgs.openssl
+    ];
+
+    # Ensure NetworkManager leaves the HaLow interface alone
+    networking.networkmanager.unmanaged = [ "wlan1" ];
+
+    # Maximize Tx Power dynamically on both machines when interface comes up
+    systemd.services.morse-txpower = {
+      description = "Set Morse Micro MM8108 TX Power";
+      bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
+      after = [ "sys-subsystem-net-devices-wlan1.device" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.iw}/bin/iw dev wlan1 set txpower fixed 1000";
+      };
     };
-  };
-}
+  }
+
+  # Jupiter AP / Group owner conf
+  (lib.mkIf (config.networking.hostName == "jupiter") {
+    environment.etc."morse/wpa_s1g.conf".text = ''
+      ctrl_interface=/var/run/wpa_supplicant_s1g
+      ctrl_interface_group=wheel
+      update_config=1
+      country=US
+      pmf=2
+      sae_pwe=1
+      network={
+          ssid="ELARA_HALOW_LINK"
+          mode=2
+          key_mgmt=SAE
+          psk="ElaraHalow"
+          frequency=915
+      }
+    '';
+
+    systemd.services.morse-supplicant = {
+      description = "Morse Micro HaLow AP (wlan1)";
+      bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
+      after = [ "sys-subsystem-net-devices-wlan1.device" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "simple";
+        RuntimeDirectory = "wpa_supplicant_s1g";
+        ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan1 -c/etc/morse/wpa_s1g.conf -s";
+        Restart = "always";
+        RestartSec = "5s";
+      };
+    };
+
+    networking.interfaces.wlan1.ipv4.addresses = [{
+      address = "10.0.0.1";
+      prefixLength = 24;
+    }];
+  })
+
+  # Odin client conf
+  (lib.mkIf (config.networking.hostName == "odin") {
+    environment.etc."morse/wpa_s1g.conf".text = ''
+      ctrl_interface=/var/run/wpa_supplicant_s1g
+      ctrl_interface_group=wheel
+      update_config=1
+      country=US
+      pmf=2
+      sae_pwe=1
+      network={
+          ssid="ELARA_HALOW_LINK"
+          scan_ssid=1
+          key_mgmt=SAE
+          psk="ElaraHalow"
+      }
+    '';
+
+    systemd.services.morse-supplicant = {
+      description = "Morse Micro HaLow Client (wlan1)";
+      bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
+      after = [ "sys-subsystem-net-devices-wlan1.device" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "simple";
+        RuntimeDirectory = "wpa_supplicant_s1g";
+        ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan1 -c/etc/morse/wpa_s1g.conf -s";
+        Restart = "always";
+        RestartSec = "5s";
+      };
+    };
+
+    networking.interfaces.wlan1.ipv4.addresses = [{
+      address = "10.0.0.2";
+      prefixLength = 24;
+    }];
+  })
+
+]
+
