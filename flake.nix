@@ -1,5 +1,5 @@
 {
-  description = "ODIN Flight Software System";
+  description = "ELARA Flight Software Systems";
 
   inputs = {
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-25.11";
@@ -24,13 +24,6 @@
         });
       };
     in {
-
-    # packages.x86_64-linux.odin-image = self.nixosConfigurations.odin.config.system.build.sdImage;
-
-    # installerImages = nixos-raspberrypi.installerImages.rpi5;
-
-    # packages.x86_64-linux.odin-image = 
-    # self.nixosConfigurations.odin.config.system.build.diskoImages;
 
     nixosConfigurations."dev-pi" = let system = "aarch64-linux";
     in nixpkgs.lib.nixosSystem {
@@ -60,7 +53,6 @@
         nixos-raspberrypi.nixosModules.raspberry-pi-5.base
         # nixos-raspberrypi.nixosModules.raspberry-pi-5.page-size-16k
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
-        # nixos-raspberrypi.nixosModules.sd-image
         ./configuration.nix
 
         ({ config, pkgs, lib, ... }:
