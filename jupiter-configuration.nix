@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
     nix.settings = {
@@ -18,21 +18,20 @@
 
 
   imports = [
-    ./hardware-pi-5/hardware-pi-5.nix
-    ./hardware-pi-5/kernel.nix
-    ./hardware-pi-5/pi5-configtxt.nix
+    ./hardware-pi-4/hardware-jupiter.nix
+    ./hardware-pi-4/pi-4-kernel.nix
     ./modules/morse/mm8108.nix
     ./modules/morse/morse-driver.nix
     ./modules/morse/morse-tools.nix
     ./modules/jupiter/radiacode.nix
-    ./modules/odin/odin-esp.nix
-    ./modules/odin/tevs.nix
+    ./modules/jupiter/jupiter-esp.nix
     ./modules/programs.nix
     ./modules/rust.nix
     ./modules/user.nix
     ./modules/wireless.nix
   ];
 
+  # hardware.tevs.enable = true;s
 
  
   system.stateVersion = "25.11";# Pinned, DON"T CHANGE
@@ -42,13 +41,30 @@
     SUBSYSTEM=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="f123", MODE="0660", GROUP="dialout", SYMLINK+="radia_code"
   '';
 
+  hardware.deviceTree = {
+    enable = true;
+    overlays = [{
+      name = "uart1-overlay";
+      dtsText = builtins.readFile ./uart1-overlay.dts;
+    }];
+  };
+  hardware.i2c.enable = true;
+hardware.raspberry-pi."4" = {
+  i2c1.enable = true;
+  bluetooth.enable = false;
+};
+
+  # Group for GPIO access
+  users.groups.gpio = { };
+  users.groups.video = { };
+
+
   # General Config
   nixpkgs.config.allowUnfree = true;
 
   hardware.enableRedistributableFirmware = true;
-  hardware.bluetooth.enable = true;
 
-  networking.hostName = "odin";
+  networking.hostName = "jupiter";
   # networking.useNetworkd = true;
   # networking.wireless.iwd = { enable = true; settings.Settings.AutoConnect = true; };
   

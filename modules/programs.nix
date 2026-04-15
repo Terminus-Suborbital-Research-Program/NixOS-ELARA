@@ -22,6 +22,7 @@
       gcc 
       pkg-config
 
+      # Dependencies to let v4l work
       clang
       llvmPackages.libclang
 
