@@ -25,8 +25,9 @@ let
         sed -i '/-C.*clean/d' Makefile
        # sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 15/' spi/esp_spi.h
        # sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 13/' spi/esp_spi.h
-        sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 584/' spi/esp_spi.h
-        sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 582/' spi/esp_spi.h
+     
+        sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 591/' spi/esp_spi.h
+        sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 596/' spi/esp_spi.h
       '';
 
       makeFlags = [
