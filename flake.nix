@@ -5,10 +5,10 @@
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-25.11";
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
     rust-overlay.url = "github:oxalica/rust-overlay";
-    jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
+    # jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
     guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
-    styx.url = "styx.url = "git+https://github.com/Terminus-Suborbital-Research-Program/Styx.git?ref=Basler-Nix&submodules=1";";
+    styx.url = "github:Terminus-Suborbital-Research-Program/Styx/Basler-Nix";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
   };
 
