@@ -28,6 +28,7 @@ let
      
         sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 591/' spi/esp_spi.h
         sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 596/' spi/esp_spi.h
+        sed -i 's/udelay(200);/msleep(400);/g' main.c
       '';
 
       makeFlags = [
