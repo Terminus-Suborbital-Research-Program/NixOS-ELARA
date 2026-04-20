@@ -8,7 +8,8 @@
     # jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
     guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
-    styx.url = "github:Terminus-Suborbital-Research-Program/Styx/Basler-Nix";
+    # styx.url = "github:Terminus-Suborbital-Research-Program/Styx/Basler-Nix";
+    styx.url = "git+https://github.com/Terminus-Suborbital-Research-Program/Styx.git?ref=Basler-Nix&submodules=1";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
   };
 
