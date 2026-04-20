@@ -25,7 +25,7 @@
     ./modules/libs/morse/morse-driver.nix
     ./modules/libs/morse/morse-tools.nix
     ./modules/jupiter/radiacode.nix
-    ./modules/libs/esp.nix
+    ./modules/libs/esp/esp-odin.nix
     ./modules/odin/tevs.nix
     ./modules/libs/programs.nix
     ./modules/libs/rust.nix

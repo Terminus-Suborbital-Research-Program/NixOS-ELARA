@@ -24,7 +24,7 @@
     ./modules/libs/morse/morse-driver.nix
     ./modules/libs/morse/morse-tools.nix
     ./modules/jupiter/radiacode.nix
-    ./modules/libs/esp.nix
+    ./modules/libs/esp/esp-jupiter.nix
     ./modules/libs/programs.nix
     ./modules/libs/rust.nix
     ./modules/config/user.nix
