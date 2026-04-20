@@ -8,7 +8,7 @@
     jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
     guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
-    styx.url = "github:Terminus-Suborbital-Research-Program/Styx/Basler-Nix";
+    styx.url = "github:Terminus-Suborbital-Research-Program/Styx/Basler-Nix?submodules=1";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
   };
 
@@ -69,7 +69,37 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
-            environment.systemPackages = [ basler-pkg jupiter-pkg ];
+          environment.systemPackages = [ basler-pkg jupiter-pkg ];
+
+          # systemd.tmpfiles.rules = [
+          #   "d /home/terminus/flight_data 0755 terminus terminus - -"
+          # ];
+
+          # systemd.services.jupiter = {
+          #   description = "JUPITER Flight Software";
+          #   after = [ "network.target" "systemd-tmpfiles-setup.service" ];
+            
+          #   path = [ jupiter-pkg pkgs.libgpiod pkgs.ffmpeg ];
+
+          #   serviceConfig = {
+          #     ExecStart = "${jupiter-pkg}/bin/jupiter-fsw";
+              
+          #     # Execute as if in this directory
+          #     WorkingDirectory = "/home/terminus/flight_data";
+              
+          #     User = "terminus";
+          #     Group = "users"; 
+              
+          #     Restart = "always";
+          #     RestartSec = "5s";
+              
+          #     # journalctl -u jupiter`
+          #     StandardOutput = "journal";
+          #     StandardError = "journal";
+          #   };
+
+          #   wantedBy = [ "multi-user.target" ];
+          # };
         })
       ];
     };
