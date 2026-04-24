@@ -28,6 +28,7 @@ let
         sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 591/' spi/esp_spi.h
         sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 596/' spi/esp_spi.h
         sed -i 's/udelay(200);/msleep(500);/g' main.c
+        sed -i 's/gpio_request(resetpin, "sysfs");/int err = gpio_request(resetpin, "sysfs"); if(err) { esp_err("Failed to request reset pin %d, error %d\\n", resetpin, err); } else { esp_info("SUCCESS: Kernel granted lock on pin %d\\n", resetpin); }/g' main.c
       '';
 
       makeFlags = [
@@ -97,15 +98,31 @@ in
   boot.extraModulePackages = [ espHostedModule ];
   networking.networkmanager.unmanaged = [ "wlan3" ];
 
+  # systemd.services.load-esp-driver = {
+  #   description = "Load ESP32 SPI Driver";
+  #   wantedBy = [ "multi-user.target" ];
+  #   after = [ "network.target" "systemd-udev-settle.service" ];
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = true;
+  #     ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
+  #   };
+  # };
+
   systemd.services.load-esp-driver = {
-    description = "Load ESP32 SPI Driver";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" "systemd-udev-settle.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
+      description = "Load ESP32 SPI Driver";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" "systemd-udev-settle.service" ];
+
+      path = [ pkgs.libgpiod ]; 
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        
+        ExecStartPre = "-${pkgs.libgpiod}/bin/gpioset -c 0 26=0; sleep 0.4; ${pkgs.libgpiod}/bin/gpioset -c 0 26=1";
+        
+        ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
+      };
     };
-  };
 }
 
