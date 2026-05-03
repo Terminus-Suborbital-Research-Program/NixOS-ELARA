@@ -26,10 +26,17 @@
         });
       };
 
+     libsecretOverlay = final: prev: {
+        libsecret = prev.libsecret.overrideAttrs (oldAttrs: {
+          # Disable the flaky D-Bus test suite on the Pi
+          doCheck = false;
+        });
+      };
+
       system = "aarch64-linux";
       pkgs = import nixpkgs { inherit system; };
 
-      basler-pkg = pkgs.callPackage ./modules/libs/basler.nix { };
+     basler-pkg = pkgs.callPackage ./modules/libs/basler.nix { };
 
       jupiter-pkg = pkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
         src = styx;
@@ -44,6 +51,17 @@
       modules = [
         nixos-hardware.nixosModules.raspberry-pi-4
         ./jupiter-configuration.nix
+        
+        ({ config, pkgs, lib, ... }:
+        {
+          nixpkgs.overlays = [ gjsOverlay  libsecretOverlay];
+          environment.systemPackages = [
+           basler-pkg 
+         #  jupiter-pkg
+          ];
+
+        })
+
       ];
     };
     
@@ -70,7 +88,7 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
-          environment.systemPackages = [ basler-pkg jupiter-pkg ];
+      #    environment.systemPackages = [ basler-pkg jupiter-pkg ];
 
           # systemd.tmpfiles.rules = [
           #   "d /home/terminus/flight_data 0755 terminus terminus - -"
@@ -120,7 +138,7 @@
         })
       ];
     }).config.system.build.sdImage;
-
+    
     devShells.${system}.default = pkgs.mkShell {
         name = "odin-proto-shell";
 
@@ -142,5 +160,7 @@
 
         '';
       };
+    
   };
 }
+
