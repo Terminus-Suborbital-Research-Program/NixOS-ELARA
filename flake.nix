@@ -60,6 +60,44 @@
          #  jupiter-pkg
           ];
 
+	  systemd.services.jupiter = {
+            description = "JUPITER Flight Software";
+            after = [ "network.target" "systemd-tmpfiles-setup.service" ];
+
+            environment = {
+              PYLON_ROOT = "${basler-pkg}/opt/pylon";
+              GENICAM_GENTL64_PATH = "${basler-pkg}/opt/pylon/lib/gentlproducer/gtl";
+              PYLON_GENTL64_PATH = "${basler-pkg}/opt/pylon/lib/gentlproducer/gtl";
+              LD_LIBRARY_PATH = "${basler-pkg}/opt/pylon/lib:${pkgs.lib.makeLibraryPath [ pkgs.libusb1 pkgs.zlib pkgs.stdenv.cc.cc.lib ]}";
+              
+              LOG_LEVEL = "debug";
+            };
+            
+            path = [ pkgs.libgpiod pkgs.ffmpeg ];
+
+            # path = [ jupiter-pkg pkgs.libgpiod pkgs.ffmpeg ];
+
+            serviceConfig = {
+              #ExecStart = "${jupiter-pkg}/bin/jupiter-fsw";
+              ExecStart = "/home/terminus/Styx/target/debug/jupiter-fsw";
+              
+              # Execute as if in this directory
+              WorkingDirectory = "/home/terminus/Styx/machines/pi-5/jupiter-fsw";
+              
+              User = "terminus";
+              Group = "users"; 
+              
+              Restart = "always";
+              RestartSec = "5s";
+              
+              # journalctl -u jupiter`
+              StandardOutput = "journal";
+              StandardError = "journal";
+            };
+
+            wantedBy = [ "multi-user.target" ];
+          };
+
         })
 
       ];
@@ -163,4 +201,3 @@
     
   };
 }
-

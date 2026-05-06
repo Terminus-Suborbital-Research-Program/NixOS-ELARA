@@ -1,4 +1,5 @@
 { config, pkgs, lib, ... }:
+
 {
     nix.settings = {
     substituters = [
@@ -23,7 +24,7 @@
    # ./modules/libs/morse/morse-driver.nix
    # ./modules/libs/morse/morse-tools.nix
     ./modules/jupiter/radiacode.nix
-   # ./modules/libs/esp/esp-jupiter.nix
+   #./modules/libs/esp/esp-jupiter.nix
     ./modules/libs/programs.nix
     ./modules/libs/rust.nix
     ./modules/config/user.nix
@@ -44,27 +45,27 @@
     }];
   };
   hardware.i2c.enable = true;
-  hardware.raspberry-pi."4" = {
-    i2c1.enable = true;
-    bluetooth.enable = false;
-  };
+hardware.raspberry-pi."4" = {
+  i2c1.enable = true;
+  bluetooth.enable = false;
+};
 
   services.udev.extraRules = ''
     SUBSYSTEM=="bcm2835-gpiomem", KERNEL=="gpiomem", GROUP="gpio", MODE="0660"
     
     SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP="gpio", MODE="0660"
     SUBSYSTEM=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="f123", MODE="0660", GROUP="dialout", SYMLINK+="radia_code"
-    #Enable user access to all basler cameras
     SUBSYSTEM=="usb", ATTRS{idVendor}=="2676", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
-  '';
 
+  '';
+  
    boot.kernelParams = [
     "console=tty1"
     "8250.nr_uarts=4"
     "console=serial0,115200n8"
     "dtoverlay=uart2"
   ];
-
+  
   # Group for GPIO access
   users.groups.gpio = { };
   users.groups.video = { };
