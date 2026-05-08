@@ -20,9 +20,9 @@
   imports = [
     ./hardware-pi-4/hardware-jupiter.nix
     ./hardware-pi-4/pi-4-kernel.nix
-   # ./modules/libs/morse/mm8108.nix
-   # ./modules/libs/morse/morse-driver.nix
-   # ./modules/libs/morse/morse-tools.nix
+    ./modules/libs/morse/mm8108.nix
+    ./modules/libs/morse/morse-driver.nix
+    ./modules/libs/morse/morse-tools.nix
     ./modules/jupiter/radiacode.nix
    #./modules/libs/esp/esp-jupiter.nix
     ./modules/libs/programs.nix
@@ -36,6 +36,7 @@
  
   system.stateVersion = "25.11";# Pinned, DON"T CHANGE
 
+  systemd.services.systemd-timesyncd.enable = false;
 
   hardware.deviceTree = {
     enable = true;
