@@ -64,11 +64,16 @@ hardware.raspberry-pi."4" = {
     "8250.nr_uarts=4"
     "console=serial0,115200n8"
     "dtoverlay=uart2"
+    "usbcore.autosuspend=-1"
+    "usbcore.usbfs_memory_mb=1000"
   ];
   
   # Group for GPIO access
   users.groups.gpio = { };
   users.groups.video = { };
+
+  services.timesyncd.enable = false;
+
 
   # General Config
   nixpkgs.config.allowUnfree = true;

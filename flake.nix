@@ -60,7 +60,10 @@
          #  jupiter-pkg
           ];
 
-	  systemd.services.jupiter = {
+          
+          # LOG_LEVEL = "debug";
+
+	        systemd.services.jupiter = {
             description = "JUPITER Flight Software";
             after = [ "network.target" "systemd-tmpfiles-setup.service" ];
 
@@ -70,7 +73,6 @@
               PYLON_GENTL64_PATH = "${basler-pkg}/opt/pylon/lib/gentlproducer/gtl";
               LD_LIBRARY_PATH = "${basler-pkg}/opt/pylon/lib:${pkgs.lib.makeLibraryPath [ pkgs.libusb1 pkgs.zlib pkgs.stdenv.cc.cc.lib ]}";
               
-              LOG_LEVEL = "debug";
             };
             
             path = [ pkgs.libgpiod pkgs.ffmpeg ];
@@ -95,7 +97,17 @@
               StandardError = "journal";
             };
 
-            wantedBy = [ "multi-user.target" ];
+          };
+          #             wantedBy = [ "multi-user.target" ];
+
+                # OnUnitActiveSec = "5m";
+
+          systemd.timers."jupiter" = {
+            wantedBy = [ "timers.target" ];
+              timerConfig = {
+                OnBootSec = "5s";
+                Unit = "jupiter.service";
+              };
           };
 
         })
