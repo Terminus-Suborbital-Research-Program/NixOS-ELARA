@@ -178,17 +178,17 @@ in
     networking.networkmanager.unmanaged = [ "wlan1" ];
 
     # Maximize Tx Power dynamically on both machines when interface comes up
-    systemd.services.morse-txpower = {
-      description = "Set Morse Micro MM8108 TX Power";
-      bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
-      after = [ "sys-subsystem-net-devices-wlan1.device" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = "${pkgs.iw}/bin/iw dev wlan1 set txpower fixed 1000";
-      };
-    };
+    # systemd.services.morse-txpower = {
+    #   description = "Set Morse Micro MM8108 TX Power";
+    #   bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
+    #   after = [ "sys-subsystem-net-devices-wlan1.device" ];
+    #   wantedBy = [ "multi-user.target" ];
+    #   serviceConfig = {
+    #     Type = "oneshot";
+    #     RemainAfterExit = true;
+    #     ExecStart = "${pkgs.iw}/bin/iw dev wlan1 set txpower fixed 1000";
+    #   };
+    # };
   }
 
   # Jupiter AP / Group owner conf
