@@ -20,6 +20,7 @@
   imports = [
     ./hardware-pi-4/hardware-jupiter.nix
     ./hardware-pi-4/pi-4-kernel.nix
+    ./hardware-pi-4/ethernet-bridge.nix
     ./modules/libs/morse/mm8108.nix
     ./modules/libs/morse/morse-driver.nix
     ./modules/libs/morse/morse-tools.nix
