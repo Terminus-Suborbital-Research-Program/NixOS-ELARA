@@ -64,7 +64,9 @@ in
 {
   boot.extraModulePackages = [ morseDriver.modules ];
   
-  boot.kernelModules = [ "dot11ah" "morse country=US  tx_max_power_mbm=1000" ];
+  boot.kernelModules = [ "dot11ah" "morse" ];
+
+  boot.extraModprobeConfig = "options morse country=US tx_max_power_mbm=1000"
 
 
   # boot.kernelPatches = [
