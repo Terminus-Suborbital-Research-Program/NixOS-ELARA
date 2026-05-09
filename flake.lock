@@ -98,15 +98,16 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1748649391,
-        "narHash": "sha256-0u3y4RvZv01emtwEFGwd33KhN193BBSB2+VOFWgRoi0=",
+        "lastModified": 1778130393,
+        "narHash": "sha256-9uUBSHlCXDxIFTxBRSS3Mk63ns23RK2NEzHZ4iF+vFg=",
         "owner": "Terminus-Suborbital-Research-Program",
         "repo": "GUARD",
-        "rev": "c665fcc7cc7206c9c36c89449b91a956c2ed4797",
+        "rev": "6f9aa651c72476e0f4d969682db3174e76ab108c",
         "type": "github"
       },
       "original": {
         "owner": "Terminus-Suborbital-Research-Program",
+        "ref": "sound_on",
         "repo": "GUARD",
         "type": "github"
       }

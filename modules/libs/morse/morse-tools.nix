@@ -64,7 +64,7 @@ wpaConfContent = ''
   };
 
   nativeBuildInputs = [ pkgs.pkg-config ];
-  buildInputs = [ pkgs.libnl pkgs.openssl pkgs.dbus ];
+  buildInputs = [ pkgs.libnl pkgs.openssl pkgs.dbus pkgs.glibc.dev ];
   postUnpack = "chmod -R u+w source";
   preBuild = ''
       export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE $(pkg-config --cflags dbus-1)"
@@ -105,6 +105,20 @@ wpaConfContent = ''
       CONFIG_DEBUG_FILE=y
       CONFIG_DEBUG_SYSLOG=y
       EOF
+      cd ..
+
+      # Configure hostapd
+      cd hostapd
+      if [ -f defconfig ]; then cp defconfig .config; else touch .config; fi
+      cat >> .config <<EOF
+      CONFIG_DRIVER_NL80211=y
+      CONFIG_LIBNL32=y
+      CONFIG_SAE=y
+      CONFIG_S1G=y
+      CONFIG_OWE=y
+      CONFIG_IEEE80211W=y
+      EOF
+      cd ..
     '';
 
   buildPhase = ''
@@ -112,18 +126,32 @@ wpaConfContent = ''
     #          EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include" \
     #          LIBS="-lnl-3 -lnl-genl-3 -lssl -lcrypto -ldbus-1"
 
-    make -j$(nproc) BINDIR=$out/sbin \
-            EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include -I${pkgs.dbus.dev}/include/dbus-1.0 -I${pkgs.dbus.lib}/lib/dbus-1.0/include" \
-            LIBS="-lnl-3 -lnl-genl-3 -lnl-route-3 -lssl -lcrypto -ldbus-1"
-      '';
+    export EXTRA_CFLAGS="-I. -I../src -I${pkgs.libnl.dev}/include/libnl3 -I${pkgs.openssl.dev}/include -I${pkgs.dbus.dev}/include/dbus-1.0 -I${pkgs.dbus.lib}/lib/dbus-1.0/include -I${pkgs.glibc.dev}/include"
+    export LIBS="-lnl-3 -lnl-genl-3 -lnl-route-3 -lssl -lcrypto -ldbus-1 -lm"
+
+    # Build wpa_supplicant
+    cd wpa_supplicant
+    make -j$(nproc) BINDIR=$out/sbin EXTRA_CFLAGS="$EXTRA_CFLAGS" LIBS="$LIBS"
+    cd ..
+
+    # Build hostapd 
+    cd hostapd
+    make -j$(nproc) BINDIR=$out/sbin EXTRA_CFLAGS="$EXTRA_CFLAGS" LIBS="$LIBS"
+    cd ..
+  '';
 
   installPhase = ''
     
     mkdir -p $out/sbin
 
-    cp wpa_supplicant_s1g $out/sbin/wpa_supplicant_s1g
-    cp wpa_cli_s1g $out/sbin/wpa_cli_s1g
-    cp wpa_passphrase_s1g $out/sbin/wpa_passphrase_s1g
+    ls
+
+    cp wpa_supplicant/wpa_supplicant_s1g $out/sbin/wpa_supplicant_s1g
+    cp wpa_supplicant/wpa_cli_s1g $out/sbin/wpa_cli_s1g
+    cp wpa_supplicant/wpa_passphrase_s1g $out/sbin/wpa_passphrase_s1g
+
+    cp hostapd/hostapd_s1g $out/sbin/hostapd_s1g
+    cp hostapd/hostapd_cli_s1g $out/sbin/hostapd_cli_s1g
   '';
 
   
@@ -175,7 +203,7 @@ in
     ];
 
     # Ensure NetworkManager leaves the HaLow interface alone
-    networking.networkmanager.unmanaged = [ "wlan1" ];
+    networking.networkmanager.unmanaged = [ "wlan1" "wlu1" ];
 
     # Maximize Tx Power dynamically on both machines when interface comes up
     # systemd.services.morse-txpower = {
@@ -209,15 +237,47 @@ in
       }
     '';
 
-    systemd.services.morse-supplicant = {
+    environment.etc."morse/hostapd_s1g.conf".text = ''
+      ctrl_interface=/var/run/hostapd_s1g
+      interface=wlan1
+      driver=nl80211
+      hw_mode=a
+      ieee80211ah=1
+      channel=44
+      op_class=71
+      country_code=US
+      s1g_prim_chwidth=1
+      ssid=ELARA_HALOW_LINK
+      wpa=2
+      wpa_key_mgmt=SAE
+      rsn_pairwise=CCMP
+      sae_password=ElaraHalow
+      ieee80211w=2
+      sae_pwe=1
+    '';
+
+    # systemd.services.morse-supplicant = {
+    #   description = "Morse Micro HaLow AP (wlan1)";
+    #   bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
+    #   after = [ "sys-subsystem-net-devices-wlan1.device" ];
+    #   wantedBy = [ "multi-user.target" ];
+    #   serviceConfig = {
+    #     Type = "simple";
+    #     RuntimeDirectory = "wpa_supplicant_s1g";
+    #     ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan1 -c/etc/morse/wpa_s1g.conf -s";
+    #     Restart = "always";
+    #     RestartSec = "5s";
+    #   };
+    # };
+
+    systemd.services.morse-hostapd = {
       description = "Morse Micro HaLow AP (wlan1)";
       bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
       after = [ "sys-subsystem-net-devices-wlan1.device" ];
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "simple";
-        RuntimeDirectory = "wpa_supplicant_s1g";
-        ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan1 -c/etc/morse/wpa_s1g.conf -s";
+        ExecStart = "${wpaSupplicantS1G}/sbin/hostapd_s1g /etc/morse/hostapd_s1g.conf -s";
         Restart = "always";
         RestartSec = "5s";
       };
@@ -247,20 +307,20 @@ in
     '';
 
     systemd.services.morse-supplicant = {
-      description = "Morse Micro HaLow Client (wlan1)";
-      bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
-      after = [ "sys-subsystem-net-devices-wlan1.device" ];
+      description = "Morse Micro HaLow Client (wlu1)";
+      bindsTo = [ "sys-subsystem-net-devices-wlu1.device" ];
+      after = [ "sys-subsystem-net-devices-wlu1.device" ];
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "simple";
         RuntimeDirectory = "wpa_supplicant_s1g";
-        ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan1 -c/etc/morse/wpa_s1g.conf -s";
+        ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -i wlu1 -c/etc/morse/wpa_s1g.conf -s";
         Restart = "always";
         RestartSec = "5s";
       };
     };
 
-    networking.interfaces.wlan1.ipv4.addresses = [{
+    networking.interfaces.wlu1.ipv4.addresses = [{
       address = "10.0.0.2";
       prefixLength = 24;
     }];

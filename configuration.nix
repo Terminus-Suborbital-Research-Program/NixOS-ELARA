@@ -24,11 +24,11 @@
     ./modules/libs/morse/mm8108.nix
     ./modules/libs/morse/morse-driver.nix
     ./modules/libs/morse/morse-tools.nix
-    ./modules/jupiter/radiacode.nix
-    ./modules/libs/esp/esp-odin.nix
+    #./modules/jupiter/radiacode.nix
+    #./modules/libs/esp/esp-odin.nix
     ./modules/odin/tevs.nix
     ./modules/libs/programs.nix
-    ./modules/libs/rust.nix
+    #./modules/libs/rust.nix
     ./modules/config/user.nix
     ./modules/config/wireless.nix
   ];
