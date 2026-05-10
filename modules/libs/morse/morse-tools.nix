@@ -270,18 +270,50 @@ in
     #   };
     # };
 
-    systemd.services.morse-hostapd = {
-      description = "Morse Micro HaLow AP (wlan1)";
-      bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
-      after = [ "sys-subsystem-net-devices-wlan1.device" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "simple";
-        ExecStart = "${wpaSupplicantS1G}/sbin/hostapd_s1g /etc/morse/hostapd_s1g.conf -s";
-        Restart = "always";
-        RestartSec = "5s";
-      };
-    };
+    # systemd.services.morse-hostapd = {
+    #   description = "Morse Micro HaLow AP (wlan1)";
+    #   bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
+    #   after = [ "sys-subsystem-net-devices-wlan1.device" ];
+    #   wantedBy = [ "multi-user.target" ];
+    #   serviceConfig = {
+    #     Type = "simple";
+    #     ExecStart = "${wpaSupplicantS1G}/sbin/hostapd_s1g /etc/morse/hostapd_s1g.conf -s";
+    #     Restart = "always";
+    #     RestartSec = "5s";
+    #   };
+    # };
+
+    # systemd.services.morse-link-test-server = {
+    #   description = "Morse Micro HaLow Link Test Server";
+    #   requires = [ "morse-hostapd.service" ];
+    #   after = [ "morse-hostapd.service" ];
+    #   wantedBy = [ "multi-user.target" ];
+      
+    #   path = [ pkgs.util-linux pkgs.iperf3 pkgs.iw wpaSupplicantS1G ];
+      
+    #   script = ''
+    #     echo " Unblocking RFKill "
+    #     rfkill unblock all
+
+    #     echo " Jupiter Interface Status "
+    #     ip a show wlan1
+
+    #     echo " Connected Stations "
+    #     sudo hostapd_s1g /etc/morse/hostapd_s1g.conf -d
+    #     #sudo hostapd_cli_s1g -p /var/run/hostapd_s1g all_sta
+    #     # iw dev wlan1 station dump || true
+
+    #     echo " Starting iperf3 Server "
+    #     # exec replaces the shell with the iperf3 process
+    #     exec iperf3 -s
+    #   '';
+      
+    #   serviceConfig = {
+    #     Type = "simple";
+    #     Restart = "always";
+    #     RestartSec = "10s";
+    #   };
+    # };
 
     networking.interfaces.wlan1.ipv4.addresses = [{
       address = "10.0.0.1";
@@ -306,19 +338,81 @@ in
       }
     '';
 
-    systemd.services.morse-supplicant = {
-      description = "Morse Micro HaLow Client (wlu1)";
-      bindsTo = [ "sys-subsystem-net-devices-wlu1.device" ];
-      after = [ "sys-subsystem-net-devices-wlu1.device" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "simple";
-        RuntimeDirectory = "wpa_supplicant_s1g";
-        ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -i wlu1 -c/etc/morse/wpa_s1g.conf -s";
-        Restart = "always";
-        RestartSec = "5s";
-      };
-    };
+    environment.etc."morse/hostapd_s1g.conf".text = ''
+      ctrl_interface=/var/run/hostapd_s1g
+      interface=wlu1
+      driver=nl80211
+      hw_mode=a
+      ieee80211ah=1
+      channel=44
+      op_class=71
+      country_code=US
+      s1g_prim_chwidth=1
+      ssid=ELARA_HALOW_LINK
+      wpa=2
+      wpa_key_mgmt=SAE
+      rsn_pairwise=CCMP
+      sae_password=ElaraHalow
+      ieee80211w=2
+      sae_pwe=1
+    '';
+
+    # systemd.services.morse-link-test-client = {
+    #   description = "Morse Micro HaLow Link Test Client";
+    #   requires = [ "morse-supplicant.service" ];
+    #   after = [ "morse-supplicant.service" ];
+    #   wantedBy = [ "multi-user.target" ];
+      
+    #   path = [ pkgs.util-linux pkgs.iperf3 pkgs.iw pkgs.iproute2 pkgs.iputils wpaSupplicantS1G ];
+      
+    #   script = ''
+    #     echo " Unblocking RFKill "
+    #     rfkill unblock all
+
+    #     echo "Waiting for Wi-Fi association and connection to Jupiter (10.0.0.1)..."
+    #     # Ping Jupiter continuously until we get a response
+    #     until ping -c 1 -W 1 10.0.0.1 >/dev/null 2>&1; do
+    #       sleep 2
+    #     done
+
+    #     echo " Link Established! "
+        
+    #     echo " Odin Interface Status "
+    #     ip a show wlu1
+
+    #     echo " WPA Supplicant Status "
+    #     wpa_cli_s1g -p /var/run/wpa_supplicant_s1g status || true
+
+    #     echo " Link Layer Diagnostics "
+    #     iw dev wlu1 link || true
+
+    #     echo " 5-Packet Ping Test "
+    #     ping -c 5 10.0.0.1
+
+    #     echo " Running UDP Throughput Test (1 Mbps) "
+    #     iperf3 -c 10.0.0.1 -u -b 1M
+    #   '';
+      
+    #   serviceConfig = {
+    #     # Oneshot means it runs the script to completion once per boot/restart
+    #     Type = "oneshot";
+    #     RemainAfterExit = true; 
+    #   };
+    # };
+
+    # systemd.services.morse-supplicant = {
+    #   description = "Morse Micro HaLow Client (wlu1)";
+    #   bindsTo = [ "sys-subsystem-net-devices-wlu1.device" ];
+    #   after = [ "sys-subsystem-net-devices-wlu1.device" ];
+    #   wantedBy = [ "multi-user.target" ];
+    #   serviceConfig = {
+    #     Type = "simple";
+    #     RuntimeDirectory = "wpa_supplicant_s1g";
+    #     ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -i wlu1 -c/etc/morse/wpa_s1g.conf -s";
+    #     Restart = "always";
+    #     RestartSec = "5s";
+    #   };
+    # };
 
     networking.interfaces.wlu1.ipv4.addresses = [{
       address = "10.0.0.2";
