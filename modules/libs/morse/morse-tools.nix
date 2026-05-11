@@ -203,7 +203,7 @@ in
     ];
 
     # Ensure NetworkManager leaves the HaLow interface alone
-    networking.networkmanager.unmanaged = [ "wlan1" "wlu1" ];
+    networking.networkmanager.unmanaged = [ "wlan1" "wlu1" "wlp1s0u1u3" ];
 
     # Maximize Tx Power dynamically on both machines when interface comes up
     # systemd.services.morse-txpower = {
@@ -239,7 +239,7 @@ in
 
     environment.etc."morse/hostapd_s1g.conf".text = ''
       ctrl_interface=/var/run/hostapd_s1g
-      interface=wlan1
+      interface=wlp1s0u1u3
       driver=nl80211
       hw_mode=a
       ieee80211ah=1
@@ -315,7 +315,7 @@ in
     #   };
     # };
 
-    networking.interfaces.wlan1.ipv4.addresses = [{
+    networking.interfaces.wlp1s0u1u3.ipv4.addresses = [{
       address = "10.0.0.1";
       prefixLength = 24;
     }];
