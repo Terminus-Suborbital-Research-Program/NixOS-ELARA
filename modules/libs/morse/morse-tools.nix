@@ -205,18 +205,38 @@ in
     # Ensure NetworkManager leaves the HaLow interface alone
     networking.networkmanager.unmanaged = [ "wlan1" "wlu1" "wlp1s0u1u3" ];
 
-    # Maximize Tx Power dynamically on both machines when interface comes up
-    # systemd.services.morse-txpower = {
-    #   description = "Set Morse Micro MM8108 TX Power";
-    #   bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
-    #   after = [ "sys-subsystem-net-devices-wlan1.device" ];
-    #   wantedBy = [ "multi-user.target" ];
-    #   serviceConfig = {
-    #     Type = "oneshot";
-    #     RemainAfterExit = true;
-    #     ExecStart = "${pkgs.iw}/bin/iw dev wlan1 set txpower fixed 1000";
-    #   };
-    # };
+    networking.interfaces.wlan0.useDHCP = true;
+
+    environment.etc."morse/wifi.conf".text = ''
+      ctrl_interface=/var/run/wpa_supplicant_s1g
+      ctrl_interface_group=wheel
+      update_config=1
+      country=US
+
+      network={
+          ssid="Student5"
+          mode=2
+          key_mgmt=SAE
+          psk="Go Chargers!"
+      }
+    '';
+
+    systemd.services.standard-wifi-supplicant = {
+      description = "Standard Wi-Fi via S1G Supplicant (wlan0)";
+      bindsTo = [ "sys-subsystem-net-devices-wlan0.device" ];
+      after = [ "sys-subsystem-net-devices-wlan0.device" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "simple";
+        RuntimeDirectory = "wpa_supplicant_s1g";
+        ExecStart = "${wpaSupplicantS1G}/sbin/wpa_supplicant_s1g -Dnl80211 -iwlan0 -c/etc/morse/wifi.conf -s";
+        Restart = "always";
+        RestartSec = "5s";
+      };
+    };
+
+    
+
   }
 
   # Jupiter AP / Group owner conf
@@ -256,6 +276,7 @@ in
       sae_pwe=1
     '';
 
+    
     # systemd.services.morse-supplicant = {
     #   description = "Morse Micro HaLow AP (wlan1)";
     #   bindsTo = [ "sys-subsystem-net-devices-wlan1.device" ];
