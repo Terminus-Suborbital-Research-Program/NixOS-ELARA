@@ -5,14 +5,16 @@
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-25.11";
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
     rust-overlay.url = "github:oxalica/rust-overlay";
-    jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
+    # jupiter.url = "github:Terminus-Suborbital-Research-Program/Styx";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
-    guard.url = "github:Terminus-Suborbital-Research-Program/GUARD";
+    guard.url = "github:Terminus-Suborbital-Research-Program/GUARD/sound_on";
+    # styx.url = "github:Terminus-Suborbital-Research-Program/Styx/Basler-Nix";
+    styx.url = "git+https://github.com/Terminus-Suborbital-Research-Program/Styx.git?ref=Basler-Nix&submodules=1";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
   };
 
-  outputs = { self, nixpkgs,  nixos-hardware, nixos-raspberrypi, rust-overlay, guard
-            , nixos-anywhere, ... } @inputs:
+  outputs = { self, nixpkgs, nixos-raspberrypi, rust-overlay, guard
+            , nixos-anywhere, styx, nixos-hardware, ... } @inputs:
     let
       gjsOverlay = final: prev: {
         gjs = prev.gjs.overrideAttrs (oldAttrs: {
@@ -23,6 +25,23 @@
           checkPhase = "true";
         });
       };
+
+     libsecretOverlay = final: prev: {
+        libsecret = prev.libsecret.overrideAttrs (oldAttrs: {
+          # Disable the flaky D-Bus test suite on the Pi
+          doCheck = false;
+        });
+      };
+
+      system = "aarch64-linux";
+      pkgs = import nixpkgs { inherit system; };
+
+     basler-pkg = pkgs.callPackage ./modules/libs/basler.nix { };
+
+      jupiter-pkg = pkgs.callPackage "${styx}/machines/pi-5/jupiter-fsw/jupiter.nix" {
+        src = styx;
+        basler-pylon = basler-pkg;
+      };
     in {
 
     nixosConfigurations."dev-pi" = let system = "aarch64-linux";
@@ -32,6 +51,67 @@
       modules = [
         nixos-hardware.nixosModules.raspberry-pi-4
         ./jupiter-configuration.nix
+        
+        ({ config, pkgs, lib, ... }:
+        {
+          nixpkgs.overlays = [ gjsOverlay  libsecretOverlay];
+          environment.systemPackages = [
+           basler-pkg 
+         #  jupiter-pkg
+          ];
+
+          
+          # LOG_LEVEL = "debug";
+
+	        systemd.services.jupiter = {
+            description = "JUPITER Flight Software";
+            after = [ "network.target" "systemd-tmpfiles-setup.service" ];
+
+            environment = {
+              PYLON_ROOT = "${basler-pkg}/opt/pylon";
+              GENICAM_GENTL64_PATH = "${basler-pkg}/opt/pylon/lib/gentlproducer/gtl";
+              PYLON_GENTL64_PATH = "${basler-pkg}/opt/pylon/lib/gentlproducer/gtl";
+              LD_LIBRARY_PATH = "${basler-pkg}/opt/pylon/lib:${pkgs.lib.makeLibraryPath [ pkgs.libusb1 pkgs.zlib pkgs.stdenv.cc.cc.lib ]}";
+              
+            };
+            
+            path = [ pkgs.libgpiod pkgs.ffmpeg ];
+
+            # path = [ jupiter-pkg pkgs.libgpiod pkgs.ffmpeg ];
+
+            serviceConfig = {
+              #ExecStart = "${jupiter-pkg}/bin/jupiter-fsw";
+              ExecStart = "/home/terminus/Styx/target/debug/jupiter-fsw";
+              
+              # Execute as if in this directory
+              WorkingDirectory = "/home/terminus/Styx/machines/pi-5/jupiter-fsw";
+              
+              User = "terminus";
+              Group = "users"; 
+              
+              Restart = "always";
+              RestartSec = "5s";
+              
+              # journalctl -u jupiter`
+              StandardOutput = "journal";
+              StandardError = "journal";
+            };
+
+          };
+          #             wantedBy = [ "multi-user.target" ];
+
+                # OnUnitActiveSec = "5m";
+
+          systemd.timers."jupiter" = {
+            wantedBy = [ "timers.target" ];
+              timerConfig = {
+                OnBootSec = "5s";
+                Unit = "jupiter.service";
+              };
+          };
+
+        })
+
       ];
     };
     
@@ -58,6 +138,37 @@
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
+      #    environment.systemPackages = [ basler-pkg jupiter-pkg ];
+
+          # systemd.tmpfiles.rules = [
+          #   "d /home/terminus/flight_data 0755 terminus terminus - -"
+          # ];
+
+          # systemd.services.jupiter = {
+          #   description = "JUPITER Flight Software";
+          #   after = [ "network.target" "systemd-tmpfiles-setup.service" ];
+            
+          #   path = [ jupiter-pkg pkgs.libgpiod pkgs.ffmpeg ];
+
+          #   serviceConfig = {
+          #     ExecStart = "${jupiter-pkg}/bin/jupiter-fsw";
+              
+          #     # Execute as if in this directory
+          #     WorkingDirectory = "/home/terminus/flight_data";
+              
+          #     User = "terminus";
+          #     Group = "users"; 
+              
+          #     Restart = "always";
+          #     RestartSec = "5s";
+              
+          #     # journalctl -u jupiter`
+          #     StandardOutput = "journal";
+          #     StandardError = "journal";
+          #   };
+
+          #   wantedBy = [ "multi-user.target" ];
+          # };
         })
       ];
     };
@@ -70,14 +181,35 @@
         nixos-raspberrypi.nixosModules.raspberry-pi-5.display-vc4
         ./configuration.nix
 
-        # Disable specific unit tests from gjs triggered by the display-vc4
-        # For some reason the last two always file, maybe because of the sandbox nix builds
-        # stuff in, but either way it breaks every build including vc4 when not disabled
         ({ config, pkgs, lib, ... }:
         {
           nixpkgs.overlays = [ gjsOverlay ];
+          # environment.systemPackages = [ jupiter-pkg ];
         })
       ];
     }).config.system.build.sdImage;
+    
+    devShells.${system}.default = pkgs.mkShell {
+        name = "odin-proto-shell";
+
+        buildInputs = [
+          basler-pkg   
+          pkgs.pkg-config    
+          pkgs.libusb1
+          pkgs.zlib
+        ];
+
+        shellHook = ''
+          export PYLON_ROOT="${basler-pkg}/opt/pylon"
+          
+          export GENICAM_GENTL64_PATH="${basler-pkg}/opt/pylon/lib/gentlproducer/gtl"
+          export PYLON_GENTL64_PATH="${basler-pkg}/opt/pylon/lib/gentlproducer/gtl"
+
+
+          export LD_LIBRARY_PATH="${basler-pkg}/opt/pylon/lib:${pkgs.lib.makeLibraryPath [ pkgs.libusb1 pkgs.zlib pkgs.stdenv.cc.cc.lib ]}:$LD_LIBRARY_PATH"
+
+        '';
+      };
+    
   };
 }

@@ -1,6 +1,5 @@
 { config, pkgs, lib, ... }:
 let
-  # Define the kernel module package
   espHostedModule = config.boot.kernelPackages.callPackage ({ stdenv, lib, fetchFromGitHub, kernel, bc }: 
     stdenv.mkDerivation {
       pname = "esp-hosted-ng";
@@ -9,7 +8,7 @@ let
       src = fetchFromGitHub {
         owner = "espressif";
         repo = "esp-hosted";
-        rev = "8626b42fd3f9eb5a1ccb5daea481f0d8d32b1685"; # Pin this to a specific commit hash later so we know it won't break
+        rev = "8626b42fd3f9eb5a1ccb5daea481f0d8d32b1685"; 
         sha256 = "sha256-DCPj3t1V7clO43dTWwRmlEYbrQ/Gcqdh3EkERZHgHQo="; 
       };
 
@@ -25,8 +24,11 @@ let
         sed -i '/-C.*clean/d' Makefile
        # sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 15/' spi/esp_spi.h
        # sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 13/' spi/esp_spi.h
-        sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 584/' spi/esp_spi.h
-        sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 582/' spi/esp_spi.h
+     
+        sed -i 's/#define HANDSHAKE_PIN.*/#define HANDSHAKE_PIN 591/' spi/esp_spi.h
+        sed -i 's/#define SPI_DATA_READY_PIN.*/#define SPI_DATA_READY_PIN 596/' spi/esp_spi.h
+        sed -i 's/udelay(200);/msleep(500);/g' main.c
+        sed -i 's/gpio_request(resetpin, "sysfs");/int err = gpio_request(resetpin, "sysfs"); if(err) { esp_err("Failed to request reset pin %d, error %d\\n", resetpin, err); } else { esp_info("SUCCESS: Kernel granted lock on pin %d\\n", resetpin); }/g' main.c
       '';
 
       makeFlags = [
@@ -67,8 +69,6 @@ let
   };
 in
 {
-  # Load module on boot
-  boot.extraModulePackages = [ espHostedModule ];
 
   # Disable this becuase rpi_init.sh disables it so that it
   # does not hold the spi interface instead of the esp driver
@@ -91,33 +91,38 @@ in
   # ls /sys/class/spi_master/
   # If not enabled, uncomment this and rebuild
 
+  # Global config:
+  _module.args.espHostedModule = espHostedModule;
+  _module.args.spiDisablerDtbo = spiDisablerDtbo;
 
-  system.activationScripts.esp-overlays = ''
-    mkdir -p /boot/firmware/overlays
-    cp ${spiDisablerDtbo}/overlays/*.dtbo /boot/firmware/overlays/
-  '';
+  boot.extraModulePackages = [ espHostedModule ];
+  networking.networkmanager.unmanaged = [ "wlan3" ];
 
-
-  hardware.raspberry-pi.config.all.dt-overlays = {
-    "spi_disabler" = { enable = true; params = {}; };
-  };
-  hardware.raspberry-pi.config.all.base-dt-params = {
-    spi = {
-      enable = true;
-      value = "on";
-    };
-  };
+  # systemd.services.load-esp-driver = {
+  #   description = "Load ESP32 SPI Driver";
+  #   wantedBy = [ "multi-user.target" ];
+  #   after = [ "network.target" "systemd-udev-settle.service" ];
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = true;
+  #     ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
+  #   };
+  # };
 
   systemd.services.load-esp-driver = {
-    description = "Load ESP32 SPI Driver";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" "systemd-udev-settle.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
-    };
-  };
+      description = "Load ESP32 SPI Driver";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" "systemd-udev-settle.service" ];
 
+      path = [ pkgs.libgpiod ]; 
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        
+        ExecStartPre = "-${pkgs.libgpiod}/bin/gpioset -c 0 26=0; sleep 0.4; ${pkgs.libgpiod}/bin/gpioset -c 0 26=1";
+        
+        ExecStart = "${pkgs.kmod}/bin/modprobe esp32_spi resetpin=575";
+      };
+    };
 }
 

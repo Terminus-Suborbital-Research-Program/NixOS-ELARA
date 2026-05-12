@@ -7,7 +7,7 @@ morseFirmware = pkgs.stdenv.mkDerivation {
     src = pkgs.fetchFromGitHub {
       owner = "MorseMicro";
       repo = "morse-firmware";
-      rev = "master"; 
+      rev = "2f376a1854d89e964c4f020afcf012fec777eb4b"; 
       sha256 = "sha256-KgWL8Yx1V3Q5Ylz1SjaM/ZoD2OhToyBQaCCDDlwHYqw=";
     };
 

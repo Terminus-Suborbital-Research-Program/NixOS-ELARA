@@ -21,16 +21,16 @@
     ./hardware-pi-5/hardware-pi-5.nix
     ./hardware-pi-5/kernel.nix
     ./hardware-pi-5/pi5-configtxt.nix
-    ./modules/morse/mm8108.nix
-    ./modules/morse/morse-driver.nix
-    ./modules/morse/morse-tools.nix
-    ./modules/jupiter/radiacode.nix
-    ./modules/odin/odin-esp.nix
+    ./modules/libs/morse/mm8108.nix
+    ./modules/libs/morse/morse-driver.nix
+    ./modules/libs/morse/morse-tools.nix
+    #./modules/jupiter/radiacode.nix
+    #./modules/libs/esp/esp-odin.nix
     ./modules/odin/tevs.nix
-    ./modules/programs.nix
-    ./modules/rust.nix
-    ./modules/user.nix
-    ./modules/wireless.nix
+    ./modules/libs/programs.nix
+    #./modules/libs/rust.nix
+    ./modules/config/user.nix
+    ./modules/config/wireless.nix
   ];
 
 
@@ -40,7 +40,11 @@
   services.udev.extraRules = ''
     # /etc/udev/rules.d/99-radiacode.rules
     SUBSYSTEM=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="f123", MODE="0660", GROUP="dialout", SYMLINK+="radia_code"
+
+    # Basler USB3 Vision Cameras
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="2676", MODE="0666"
   '';
+
 
   # General Config
   nixpkgs.config.allowUnfree = true;
@@ -54,41 +58,5 @@
   
   security.sudo.wheelNeedsPassword = false;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
-  networking.networkmanager.unmanaged = [ "wlan1" "wlan3"];
-
-  # esp32 odin config
-  environment.etc."esp32/wpa_client.conf".text = ''
-    ctrl_interface=/var/run/wpa_supplicant_esp
-    ctrl_interface_group=wheel
-    update_config=1
-    country=US
-
-    network={
-        ssid="ELARA_ESP_LINK"
-        scan_ssid=1
-        key_mgmt=WPA-PSK
-        psk="ElaraFlight"
-    }
-  '';
-
-  systemd.services.esp-client = {
-    description = "ESP32 Client (wlan3)";
-    bindsTo = [ "sys-subsystem-net-devices-wlan3.device" ];
-    after = [ "sys-subsystem-net-devices-wlan3.device" ];
-    wantedBy = [ "multi-user.target" ];
-    
-    serviceConfig = {
-      Type = "simple";
-      ExecStart = "${pkgs.wpa_supplicant}/bin/wpa_supplicant -Dnl80211 -iwlan3 -c/etc/esp32/wpa_client.conf -s";
-      Restart = "always";
-      RestartSec = "5s";
-    };
-  };
-
-  networking.interfaces.wlan3.ipv4.addresses = [{
-    address = "192.168.4.2";
-    prefixLength = 24;
-  }];
 
 }

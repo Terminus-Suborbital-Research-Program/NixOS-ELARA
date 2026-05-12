@@ -2,7 +2,7 @@
 
 {
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
-boot.initrd.availableKernelModules = lib.mkForce [
+  boot.initrd.availableKernelModules = [
     "vc4"          # Broadcom display
     "bcm2835_dma"  # DMA
     "i2c_bcm2835"  # I2C

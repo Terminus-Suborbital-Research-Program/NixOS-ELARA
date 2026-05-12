@@ -22,6 +22,12 @@
       gcc 
       pkg-config
 
+      # Networking
+      iperf3 
+      iw 
+      iproute2 
+      iputils
+
       # Dependencies to let v4l work
       clang
       llvmPackages.libclang

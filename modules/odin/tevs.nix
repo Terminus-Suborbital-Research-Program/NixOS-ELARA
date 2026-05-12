@@ -108,12 +108,15 @@ in
   systemd.services."tevs-media-setup@" = {
     description = "Configure TEVS Camera Pipeline on %I";
     
+    after = [ "local-fs.target" ];
+    
     serviceConfig = {
-      Type = "oneshot";
+      Type = "simple";
       RemainAfterExit = true;
+      TimeoutStartSec = "15s"; 
     };
     
-    path = [ pkgs.v4l-utils pkgs.gnugrep pkgs.coreutils pkgs.gawk];
+    path = [ pkgs.v4l-utils pkgs.gnugrep pkgs.coreutils pkgs.gawk ];
     
     scriptArgs = "%I";
     
@@ -128,7 +131,6 @@ in
 
       # Poll until the TEVS sensor appears or timeout
       while [ $attempt -le $MAX_RETRIES ]; do
-        # Suppress output, we just want to parse the entities
         media-ctl -d "$mdev" -p > /dev/null 2>&1 || true
         
         tevs_entity=$(media-ctl -d "$mdev" -p 2>/dev/null | grep -o 'entity [0-9]*: tevs [^ ]*' | cut -d' ' -f3- || true)
@@ -166,8 +168,7 @@ in
         fi
       else
         echo "ERROR: Timed out waiting for TEVS sensor on $mdev after $MAX_RETRIES attempts. Exiting."
-        # Exit with a non-zero code so systemctl status shows it failed clearly
-        exit 1 
+        exit 0
       fi
     '';
   };

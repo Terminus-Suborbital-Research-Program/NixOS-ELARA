@@ -20,15 +20,16 @@
   imports = [
     ./hardware-pi-4/hardware-jupiter.nix
     ./hardware-pi-4/pi-4-kernel.nix
-    ./modules/morse/mm8108.nix
-    ./modules/morse/morse-driver.nix
-    ./modules/morse/morse-tools.nix
+    ./hardware-pi-4/ethernet-bridge.nix
+    ./modules/libs/morse/mm8108.nix
+    ./modules/libs/morse/morse-driver.nix
+    ./modules/libs/morse/morse-tools.nix
     ./modules/jupiter/radiacode.nix
-    ./modules/jupiter/jupiter-esp.nix
-    ./modules/programs.nix
-    ./modules/rust.nix
-    ./modules/user.nix
-    ./modules/wireless.nix
+   #./modules/libs/esp/esp-jupiter.nix
+    ./modules/libs/programs.nix
+    ./modules/libs/rust.nix
+    ./modules/config/user.nix
+    ./modules/config/wireless.nix
   ];
 
   # hardware.tevs.enable = true;s
@@ -36,10 +37,7 @@
  
   system.stateVersion = "25.11";# Pinned, DON"T CHANGE
 
-  services.udev.extraRules = ''
-    # /etc/udev/rules.d/99-radiacode.rules
-    SUBSYSTEM=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="f123", MODE="0660", GROUP="dialout", SYMLINK+="radia_code"
-  '';
+  systemd.services.systemd-timesyncd.enable = false;
 
   hardware.deviceTree = {
     enable = true;
@@ -54,9 +52,29 @@ hardware.raspberry-pi."4" = {
   bluetooth.enable = false;
 };
 
+  services.udev.extraRules = ''
+    SUBSYSTEM=="bcm2835-gpiomem", KERNEL=="gpiomem", GROUP="gpio", MODE="0660"
+    
+    SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP="gpio", MODE="0660"
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="f123", MODE="0660", GROUP="dialout", SYMLINK+="radia_code"
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="2676", MODE:="0666", TAG+="uaccess", TAG+="udev-acl"
+
+  '';
+  
+   boot.kernelParams = [
+    "console=tty1"
+    "8250.nr_uarts=4"
+    "console=serial0,115200n8"
+    "dtoverlay=uart2"
+    "usbcore.autosuspend=-1"
+    "usbcore.usbfs_memory_mb=1000"
+  ];
+  
   # Group for GPIO access
   users.groups.gpio = { };
   users.groups.video = { };
+
+  services.timesyncd.enable = false;
 
 
   # General Config
@@ -70,41 +88,4 @@ hardware.raspberry-pi."4" = {
   
   security.sudo.wheelNeedsPassword = false;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
-  networking.networkmanager.unmanaged = [ "wlan3" "wlan1" ];
-
-  environment.etc."esp32/wpa_ap.conf".text = ''
-    ctrl_interface=/var/run/wpa_supplicant_esp
-    ctrl_interface_group=wheel
-    update_config=1
-    country=US
-
-    network={
-        ssid="ELARA_ESP_LINK"
-        mode=2               # AP Mode
-        key_mgmt=WPA-PSK
-        psk="ElaraFlight"
-        frequency=2437       # Channel 6
-    }
-  '';
-
-  systemd.services.esp-ap = {
-    description = "ESP32 Access Point (wlan3)";
-    bindsTo = [ "sys-subsystem-net-devices-wlan3.device" ];
-    after = [ "sys-subsystem-net-devices-wlan3.device" "load-esp-driver.service" ];
-    wantedBy = [ "multi-user.target" ];
-    
-    serviceConfig = {
-      Type = "simple";
-      ExecStart = "${pkgs.wpa_supplicant}/bin/wpa_supplicant -Dnl80211 -iwlan3 -c/etc/esp32/wpa_ap.conf -s";
-      Restart = "always";
-      RestartSec = "5s";
-    };
-  };
-
-  networking.interfaces.wlan3.ipv4.addresses = [{
-    address = "192.168.4.1";
-    prefixLength = 24;
-  }];
-
 }
