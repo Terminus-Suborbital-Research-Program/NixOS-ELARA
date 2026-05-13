@@ -65,7 +65,7 @@
 
 	        systemd.services.jupiter = {
             description = "JUPITER Flight Software";
-            after = [ "network.target" "systemd-tmpfiles-setup.service" ];
+            after = ["systemd-tmpfiles-setup.service" ];
 
             environment = {
               PYLON_ROOT = "${basler-pkg}/opt/pylon";

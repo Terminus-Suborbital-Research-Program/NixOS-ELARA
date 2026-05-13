@@ -23,7 +23,7 @@
   networking.networkmanager.enable = lib.mkOverride 0 false;
   networking.useDHCP = lib.mkDefault true;
   networking.wireless = {
-    enable = true;
+    enable = false;
     networks."Student5".pskRaw =
       "6b478d4e5dd413b48e554afe74144e44823cf57bc183d19d7d410d0737c35fa1";
     # networks."Staff5".pskRaw =
